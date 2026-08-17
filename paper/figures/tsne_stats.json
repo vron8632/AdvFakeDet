@@ -1,0 +1,8 @@
+{
+  "n_clean": 200,
+  "n_cloaked": 200,
+  "n_wm_b": 200,
+  "n_wm_c": 200,
+  "mean_cosine_dist_clean_vs_cloaked": 0.05514250695705414,
+  "mean_cosine_dist_cloaked_vs_wm_c": 0.0012976148864254355
+}

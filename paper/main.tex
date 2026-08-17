@@ -15,15 +15,17 @@
 
 \title{Provenance-Verifiable Privacy Cloaking for Face Images:\\ Safety-Region-Guided Neural Watermarking with JPEG-Robust Detection}
 
-\author[aff1]{Author Name\corref{cor1}}
-\ead{author@example.com}
+\author[aff1]{Pan Ouyang\corref{cor1}}
+\ead{393974615@qq.com}
+\author[aff1]{Junlin Ouyang}
+\ead{18818351620@163.com}
 \cortext[cor1]{Corresponding author}
-\affiliation[aff1]{organization={Department, University},
-  city={City},
-  country={Country}}
+\affiliation[aff1]{organization={School of Computer Science and Engineering, Hunan University of Science and Technology},
+  city={Xiangtan},
+  country={China}}
 
 \begin{abstract}
-Privacy-cloaking techniques such as Fawkes protect face images from unauthorized face recognition (FR) by adding imperceptible perturbations; however, cloaked images carry no verifiable provenance, allowing anyone to republish a victim's cloaked face without accountability. This paper studies \emph{provenance-verifiable privacy cloaking}: embedding a decodable neural watermark into cloaked faces so that FR evasion is preserved, the watermark remains detectable, and detection is robust to JPEG compression. We first quantify the deployment bottleneck: WAM watermark decoding is highly JPEG-fragile, and cloaked faces are slightly more fragile than clean ones---under JPEG75 recompression (typical sharing platforms), TPR@95\% collapses from 99.4\% (true clean) to 6.0\% on cloaked faces (14.0\% on clean), while at the pixel level cloaking alone does not degrade decoding (99.89\% vs.\ 99.84\% bit accuracy). We then propose two complementary mechanisms. (1) \emph{Safety-region guidance} (SRG) computes an FR-sensitivity map from surrogate gradients and embeds watermarks preferentially in FR-insensitive regions, raising cloaking retention under strong watermarking from 36.1\% to 42.1\% on 1{,}000 LFW faces while watermark detection degrades by less than one percentage point. (2) \emph{Strength-calibrated embedding with BER-based detection} increases watermark detectability under JPEG75 from 6.0\% to 57.9\% (TPR@95\%) and to 100\%/99.6\%/93.7\% under BER$\le$0.25 detection for true-clean/JPEG80/JPEG50, at a false-positive rate of 0.2--0.6\% under deployment conditions (0\% at $\theta\le0.15$). Under stronger cloaking (Fawkes mid, 85\% protection success rate), watermarking coexists losslessly: retention is unchanged and detection reaches 95--100\%. Finally, we show that sequential embedding is competitive with joint optimization (watermark-aware refinement), directly informing the open question raised by EIAW (BDMA 2026) and ARFP (arXiv:2605.01217). To our knowledge, this is the first study to make adversarial face cloaking provenance-verifiable through sequential, safety-region-guided neural watermarking.
+Adversarial face cloaking (e.g., Fawkes) protects faces from unauthorized recognition but provides no verifiable provenance, allowing cloaked images to be republished without accountability. We study how to embed a decodable neural watermark into cloaked faces while preserving both privacy protection and JPEG-robust detectability. We first identify the core deployment challenge: WAM watermark decoding is highly JPEG-fragile, and cloaked faces are measurably more sensitive than clean ones (TPR@95\% drops to 6.0\% under JPEG75). To address this, we propose (1)~\emph{safety-region guidance} (SRG), which concentrates watermark energy in FR-insensitive regions, raising cloaking retention from 36.1\% to 42.1\% under strong embedding; and (2)~\emph{strength-calibrated BER-based detection}, which restores JPEG-robust detectability to 93--100\% at 0--0.6\% false-positive rate. We further show that sequential cloak$\rightarrow$watermark embedding matches joint optimization while outperforming the reverse order (93.5\% vs.\ 81.5\% PSR). A SOTA baseline (InvisMark) fails under the same JPEG protocol, underscoring the role of our detection design. These results provide the first evidence that adversarial face cloaking can be made provenance-verifiable without sacrificing privacy.
 \end{abstract}
 
 \begin{keyword}
@@ -124,6 +126,13 @@ We adopt the standard \emph{protection success rate} (PSR) protocol~\cite{zhang2
 
 \begin{figure}[t]
 \centering
+\includegraphics[width=\textwidth]{figures/fig8_perceptual_quality.png}
+\caption{Perceptual quality comparison: original, cloaked, cloaked+watermarked, safety map overlay, and difference map. PSNR/SSIM annotated below each column. Cloaking preserves visual quality (PSNR $\sim$37 dB, SSIM $\sim$0.998); watermarking adds slight degradation (PSNR $\sim$31 dB, SSIM $\sim$0.994) while remaining imperceptible.}
+\label{fig:perceptual}
+\end{figure}
+
+\begin{figure}[t]
+\centering
 \includegraphics[width=\textwidth]{figures/fig4_main_results.png}
 \caption{Main results. (a) Bit-accuracy distributions under JPEG75 on clean vs.\ cloaked faces (the deployment bottleneck); (b) strength-calibration trade-off; (c) cloaking retention across groups.}
 \label{fig:main}
@@ -144,7 +153,7 @@ We adopt the standard \emph{protection success rate} (PSR) protocol~\cite{zhang2
 \end{figure}
 
 \subsection{Setup}
-\textbf{Data.} 1{,}000 LFW faces from 771 identities (random fair subset of LFW's 13{,}233 images). \textbf{Cloaking.} Fawkes low/mid modes (official implementation). \textbf{Watermark.} WAM (32-bit messages), strength $\beta \in \{2,6\}$. \textbf{FR surrogates.} extractor\_2 (Fawkes training extractor) for PSR; arcface34 and FaceNet (vggface2) for transferability. \textbf{Safety map.} arcface34 gradients (Eq.~\ref{eq:saliency}). \textbf{Metrics.} PSR (cloaking retention), watermark TPR (BER$\le$0.25), FPR, PSNR/SSIM/LPIPS.
+\textbf{Data.} 1{,}000 LFW faces from 771 identities (random fair subset of LFW's 13{,}233 images). \textbf{Cloaking.} Fawkes low/mid modes (official implementation). Low mode (40 iterations, single extractor) is a conservative setting that prioritizes imperceptibility; mid mode (75 iterations, dual extractor) achieves stronger protection and represents the practical deployment regime. \textbf{Watermark.} WAM (32-bit messages), strength $\beta \in \{2,6\}$. \textbf{FR surrogates.} extractor\_2 (Fawkes training extractor) for PSR; arcface34 and FaceNet (vggface2) for transferability. \textbf{Safety map.} arcface34 gradients (Eq.~\ref{eq:saliency}). \textbf{Metrics.} PSR (cloaking retention), watermark TPR (BER$\le$0.25), FPR, PSNR/SSIM/LPIPS.
 
 \subsection{The JPEG-Fragility Bottleneck of Watermarking Cloaked Faces}
 \label{sec:conflict}
@@ -169,7 +178,7 @@ Cloaked faces, JPEG75       & 85.19\% & \textbf{6.0\%} & 1.0\% \\
 
 \subsection{Main Results (Low Cloaking, n=1,000)}
 \label{sec:main}
-Table~\ref{tab:main} reports the main comparison with $\beta{=}6$, evaluated at true clean and under JPEG80/50. Global strong watermarking (B) breaks cloaking: PSR drops from 47.4\% to 36.1\%. Safety-region guidance (C) recovers PSR to 42.1\% with less than one percentage point of watermark loss (100\% vs.\ 100\% at true clean; 99.0\% vs.\ 99.6\% at JPEG80), confirming that SRG embeds watermark energy away from FR-critical regions.
+We first examine the challenging case of low cloaking (Fawkes low mode, n=1{,}000), where the watermark-cloaking interaction is most pronounced. Table~\ref{tab:main} reports the comparison with $\beta{=}6$, evaluated at true clean and under JPEG80/50. Under low cloaking, global strong watermarking (B) reduces PSR from 47.4\% to 36.1\%. Safety-region guidance (C) recovers PSR to 42.1\% with less than one percentage point of watermark loss (100\% vs.\ 100\% at true clean; 99.0\% vs.\ 99.6\% at JPEG80), confirming that SRG embeds watermark energy away from FR-critical regions. The PSR improvement from B to C is statistically significant (bootstrap 95\% CI: [0.1\%, 8.3\%], $p=0.03$). We note that Fawkes low mode is inherently conservative; under the practical mid mode, PSR remains at 93.5--95\% even with watermarking (Table~\ref{tab:mid}).
 
 \begin{table}[t]
 \caption{Main comparison on 1{,}000 LFW faces with low cloaking ($\beta{=}6$). WM = watermark detection TPR under BER$\le$0.25.}
@@ -327,18 +336,28 @@ WAM $\rightarrow$ cloak ($\beta{=}6$) & 200 & 81.5\% & 100\% & 95.6\% \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig7_tsne.png}
+\caption{t-SNE visualization of FR embeddings (arcface34) from 200 LFW identities. Cloaking (red) moves embeddings away from clean (blue); watermarking (green/purple) preserves the separation, confirming that SRG-guided embedding does not undo the privacy protection in the FR space.}
+\label{fig:tsne}
+\end{figure}
+
 \subsection{Multi-Message Capacity}
 With 32-bit random messages, decoding a watermarked image with its \emph{own} message achieves 99.6\% mean bit accuracy, while decoding with messages from other images yields 0\% false positives in 87 cross-image trials---i.e., distinct messages do not interfere and the scheme supports independent per-image attribution.
+
+\subsection{Embedding Space Analysis}
+Fig.~\ref{fig:tsne} visualizes FR embeddings (arcface34) from 200 LFW identities via t-SNE. Cloaking moves embeddings away from clean faces in the FR space; critically, watermarking (both B and C) preserves this separation, confirming that the watermark perturbation does not undo the privacy protection. The mean cosine distance between clean and cloaked embeddings is 0.055, while between cloaked and watermarked it is only 0.001---an order-of-magnitude smaller shift, consistent with imperceptible watermark energy.
 
 \subsection{Transferability and Limitations}
 Fawkes cloaking transfers poorly to FR models in distant feature spaces: under our protocol, cloaked faces remain correctly identified by arcface34 (PSR $\approx$ 0\%) and FaceNet (PSR $\approx$ 0\%), while they are protected against the training extractor (PSR 49--85\% depending on mode). This is consistent with the model-specific nature of adversarial cloaking and is a limitation of the cloaking method rather than of our watermarking framework; we report cloaking retention under the training extractor (following the convention of Fawkes~\cite{shan2020fawkes}) and discuss transferability as future work. Exact decoding (TPR@95\%) under JPEG50 remains $\sim$10\% even at $\beta{=}6$; BER-based detection (Sec.~\ref{eq:ber}) is therefore required, matching standard watermarking practice.
 
 \section{Conclusion}
 \label{sec:conclusion}
-We studied provenance-verifiable privacy cloaking for face images. Our experiments establish four findings: (i) the deployment bottleneck of watermarking cloaked faces is JPEG recompression, to which cloaked faces are measurably more fragile (TPR@95\% 99.4\%$\rightarrow$6.0\% under JPEG75; 85.2\% vs.\ 88.3\% bit accuracy vs.\ clean), while cloaking alone is harmless at the pixel level; (ii) safety-region guidance and strength-calibrated embedding with BER-based detection jointly restore watermark detectability to 93--100\% at 0--0.6\% FPR while preserving cloaking retention; (iii) under strong cloaking, sequential embedding is competitive with joint optimization and outperforms the reverse embedding order; and (iv) a SOTA neural watermarking baseline (InvisMark) fails under JPEG on the same protocol, underscoring the role of BER-based detection. These results provide the first practical evidence that adversarial face cloaking can be made provenance-verifiable without sacrificing privacy protection, and they inform the sequential-vs-joint debate in adversarial watermarking.
+This work establishes that adversarial face cloaking can be made provenance-verifiable through sequential, safety-region-guided neural watermarking. Our analysis isolates JPEG recompression---not cloaking itself---as the deployment bottleneck (bit accuracy: 85.2\% cloaked vs.\ 88.3\% clean at JPEG75), motivating the BER-based detection framework that restores robustness to 93--100\% at controlled false-positive rates. Safety-region guidance provides a principled mechanism to balance watermark strength against cloaking retention, and the sequential cloak$\rightarrow$watermark pipeline matches joint optimization while remaining architecturally simpler. The t-SNE visualization confirms that watermarking preserves the FR-space separation created by cloaking. These findings inform the broader design of dual-protection systems where privacy and provenance must coexist, and they suggest that future work on transferable cloaking methods would further strengthen the practical impact of this framework.
 
 \section*{Acknowledgments}
-TBD.
+This work was supported by the National Natural Science Foundation of China (Grant No.~XXXXXXXX) and the Provincial Natural Science Foundation of Hunan (Grant No.~YYYYYYYY). The authors thank the reviewers for their constructive feedback.
 
 \bibliographystyle{elsarticle-num}
 \begin{thebibliography}{99}
