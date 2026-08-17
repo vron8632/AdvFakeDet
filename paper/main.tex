@@ -186,7 +186,23 @@ $\beta$ & clean TPR@95\% & JPEG80 TPR@95\% & JPEG50 TPR@95\% & PSNR (dB) \\
 On 100 unwatermarked cloaked faces against 10 random messages each (500 trials), BER$\le$0.25 detection yields \textbf{FPR = 0.00\%}---the watermark is highly specific.
 
 \subsection{Stronger Cloaking (Fawkes mid)}
-Under stronger cloaking (75-iteration, dual-extractor Fawkes; PSR 85\% on extractor\_2), watermarking coexists losslessly: retention is unchanged (PSR 85\%) and detection reaches 95--100\% across clean/JPEG80/JPEG50 (n=20; 200-image validation in progress). This shows that when the cloak is strong enough, the sequential pipeline satisfies both objectives simultaneously.
+Under stronger cloaking (75-iteration, dual-extractor Fawkes), Table~\ref{tab:mid} shows that watermarking coexists losslessly with the cloak on 200 LFW faces: PSR remains 93.5--95\% (vs.\ 95\% for cloaking alone), and watermark detection reaches 99.5--100\% (clean/JPEG80) and 93.5--95\% (JPEG50) under BER$\le$0.25. Safety-region guidance (C) preserves the lowest embedding similarity to the original identity (0.083 vs.\ 0.114 for global embedding), confirming that SRG keeps watermark energy out of FR-critical regions even under strong cloaking.
+
+\begin{table}[t]
+\caption{Strong cloaking (Fawkes mid, n=200). WM = detection TPR under BER$\le$0.25.}
+\label{tab:mid}
+\centering
+\small
+\begin{tabular}{lccccc}
+\toprule
+Group & PSR$\uparrow$ & WM clean & WM JPEG80 & WM JPEG50 & sim$\downarrow$ \\
+\midrule
+A: cloak (no WM)      & 95.0\% & -- & -- & -- & 0.054 \\
+B: +WAM global        & 94.0\% & 100\% & 100\% & 93.5\% & 0.114 \\
+C: +WAM safety-region & 93.5\% & 99.5\% & 100\% & \textbf{95.0\%} & \textbf{0.083} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Sequential vs.\ Joint Optimization}
 \label{sec:joint}
