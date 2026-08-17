@@ -65,6 +65,22 @@ FPR = 0.2–0.6% at θ=0.25 under matched JPEG75 (0% at θ≤0.15, 500 trials). 
 - EIAW (BDMA 2026): joint optimization of attack + DCT watermark (classification)
 - ARFP (arXiv:2605.01217): reversible face protection with keyed recovery (joint-training)
 - WAM (ICLR 2025): neural watermarking backbone
+- InvisMark (WACV 2025): SOTA neural watermarking baseline (fails under JPEG on our protocol)
+
+## Status
+
+- [x] All experiments complete (9 experiment groups)
+- [x] Paper draft complete (9 tables, 8 figures, 18 references)
+- [x] Statistical significance analysis (bootstrap 95% CI)
+- [x] t-SNE embedding space visualization
+- [x] Perceptual quality comparison figure
+- [x] Submission guide (step-by-step)
+- [ ] Generate fig1 (teaser) + fig2 (framework diagram)
+- [ ] Compile final PDF
+- [ ] Find suggested reviewers (2-3)
+- [ ] Submit to SPIC via Editorial Manager
+
+See `docs/SUBMISSION_STEP_BY_STEP.md` for submission instructions.
 
 ## License
 
