@@ -94,12 +94,13 @@ AdvFake/
 5. 引用 DOI 核对已完成（related_work/doi_verify_report.md 12 条）
 
 ## 5.5 2026-08-17 下午新增（W4 补实验，全部完成）
+- **⚠️ 重大协议修正**（docs/PROTOCOL_CORRECTION_20260817.md）：`--jpeg_quality -1` 在 PIL 中等价于 JPEG75！原论文所有 "clean" 列（99.2/98.6 等）实际是 JPEG75；核心动机从 "遮蔽破坏水印（98→6%)" 修正为 "遮蔽本身不破坏（true-clean 99.84→99.89），JPEG 重压缩才是瓶颈（JPEG75 下 cloak 6%/clean 14%）"
 - **InvisMark SOTA 基线对比**（WACV 2025 官方 ckpt）：遮蔽图 clean 解码 100% TPR，但 JPEG80/50 下 TPR=0%（干净图也一样，连 JPEG95 都失效）→ 论文 Table 5 + Sec. 4.8
-- **BER 阈值敏感性曲线**：θ=0.25 时 FPR 实为 0.4–0.8%（论文原 0% 主张已修正）；θ≤0.15 时 FPR=0% → Fig 6 + Table 3
+- **BER 阈值敏感性曲线**（JPEG75 部署条件、协议匹配）：θ=0.25 时 TPR 99.2/98.6/100%，FPR 0.2–0.6%；θ≤0.15 时 FPR=0% → Fig 6 + Table 3
 - **α 消融**（SRG 强度）：甜点区 α∈[0.75,1.0]（PSR 93.5%）；α<0.5 水印失效 → Table 7
 - **嵌入顺序实验**：先嵌水印再遮蔽 PSR 掉到 70–81.5%，先遮蔽再嵌水印保持 93.5% → Table 8（回击审稿人顺序质疑）
 - **多消息容量**：交叉串扰 FPR=0%（87 trials）
-- 论文更新至 15 页（5 图 8 表），编译通过；汇总 JSON: assets/experiments/new_results_20260817.json；记录 docs/W4_supplementary_20260817.md
+- 论文更新至 16 页（5 图 8 表 + conflict 分解表），编译通过；诚实数据汇总: assets/experiments/honest_core_facts.json；记录 docs/W4_supplementary_20260817.md
 
 ## 6. 环境备忘（重启后验证）
 - GPU：2×RTX 4090（学生遗留进程 targeted_attack_selected_fixed.py 占 ~2GB/卡，勿杀）
