@@ -94,3 +94,31 @@ ax.set_title("JPEG robustness of watermark detection")
 plt.tight_layout()
 plt.savefig(os.path.join(OUT, "fig5_jpeg_robustness.png"), dpi=300, bbox_inches="tight")
 print("saved fig5_jpeg_robustness.png")
+
+# ---------- Fig 6: BER 阈值敏感性曲线（θ TPR/FPR 权衡） ----------
+import json as _json
+data = _json.load(open(os.path.join(ROOT, "assets/experiments/new_results_20260817.json")))
+curves = data["ber_curve"]["curves"]
+ths = [c["theta"] for c in curves]
+tpr_lowB = [c["tpr_low_B"]*100 for c in curves]
+tpr_lowC = [c["tpr_low_C"]*100 for c in curves]
+tpr_midB = [c["tpr_mid_B"]*100 for c in curves]
+fpr_low = [c["fpr_low"]*100 for c in curves]
+fpr_mid = [c["fpr_mid"]*100 for c in curves]
+
+fig, ax = plt.subplots(figsize=(6.2, 4.5))
+ax.plot(ths, tpr_lowB, "o-", color=C_B, lw=2, label="TPR B: global (low, $\\beta$=6)")
+ax.plot(ths, tpr_lowC, "s-", color=C_C, lw=2, label="TPR C: safety-region (low, $\\beta$=6)")
+ax.plot(ths, tpr_midB, "^-", color="#C44E52", lw=2, label="TPR B (mid, $\\beta$=6)")
+ax.plot(ths, fpr_low, "x--", color=C_A, lw=2, label="FPR (low, unwatermarked)")
+ax.plot(ths, fpr_mid, "d--", color="#8C6D31", lw=2, label="FPR (mid, unwatermarked)")
+ax.axvline(0.25, ls=":", color="gray", lw=1)
+ax.text(0.255, 5, "$\\theta$=0.25", fontsize=8, color="gray")
+ax.set_xlabel("detection threshold $\\theta$ (BER)")
+ax.set_ylabel("TPR / FPR (%)")
+ax.set_ylim(0, 105)
+ax.legend(fontsize=8, loc="lower right")
+ax.set_title("BER threshold sensitivity: TPR vs FPR")
+plt.tight_layout()
+plt.savefig(os.path.join(OUT, "fig6_ber_curve.png"), dpi=300, bbox_inches="tight")
+print("saved fig6_ber_curve.png")

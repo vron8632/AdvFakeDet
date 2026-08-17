@@ -1,0 +1,57 @@
+masks:
+  kind: full
+  invert_proba: 1.0
+augs:
+  identity: 1
+  jpeg: 5
+  resize: 1
+  crop: 1
+  rotate: 1
+  hflip: 1
+  perspective: 1
+  gaussian_blur: 1
+  median_filter: 1
+  brightness: 1
+  contrast: 1
+  saturation: 1
+  hue: 1
+  crop_resize_pad: 2
+augs_params:
+  resize:
+    min_size: 0.7
+    max_size: 1.5
+  crop:
+    min_size: 0.33
+    max_size: 1.0
+  rotate:
+    min_angle: -10
+    max_angle: 10
+  perspective:
+    min_distortion_scale: 0.1
+    max_distortion_scale: 0.5
+  jpeg:
+    min_quality: 30
+    max_quality: 95
+  gaussian_blur:
+    min_kernel_size: 3
+    max_kernel_size: 17
+  median_filter:
+    min_kernel_size: 3
+    max_kernel_size: 7
+  brightness:
+    min_factor: 0.5
+    max_factor: 2
+  contrast:
+    min_factor: 0.5
+    max_factor: 2.0
+  saturation:
+    min_factor: 0.5
+    max_factor: 2
+  hue:
+    min_factor: -0.1
+    max_factor: 0.1
+  crop_resize_pad:
+    resize_min: 0.7
+    resize_max: 1.5
+    crop_min: 0.5
+    crop_max: 0.66

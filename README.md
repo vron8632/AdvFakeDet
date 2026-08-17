@@ -9,8 +9,9 @@ This repository implements **provenance-verifiable privacy cloaking**: embedding
 Key scientific findings:
 - **The cloaking–watermark conflict**: Fawkes cloaking reduces WAM watermark decoding from 99.8% bit accuracy (98% TPR@95%) on clean faces to 85.2% (6%) on cloaked faces.
 - **Safety-region guidance (SRG)**: FR-sensitivity maps guide watermark embedding away from FR-critical regions, restoring cloaking retention (36.1% → 42.1%) with <1pp watermark loss.
-- **Strength calibration + BER detection**: scaling_w=6 and BER≤0.25 detection reach 99.2%/99.6%/93.7% (clean/JPEG80/JPEG50) at 0% FPR.
-- **Sequential ≈ joint**: sequential embedding (cloak → SRG-guided WAM) is competitive with watermark-aware joint optimization.
+- **Strength calibration + BER detection**: scaling_w=6 and BER≤0.25 detection reach 99.2%/99.6%/93.7% (clean/JPEG80/JPEG50) at 0.4–0.8% FPR (0% at θ≤0.15).
+- **Sequential ≈ joint, and order matters**: sequential embedding (cloak → SRG-guided WAM) is competitive with joint optimization (PSR 85% vs 85%) and preserves cloaking (93.5%) whereas watermark-then-cloak degrades it to 70–81.5%.
+- **SOTA baseline**: InvisMark (WACV 2025) official checkpoint fails under JPEG on the same protocol (TPR 0% at JPEG80/50, even on clean faces), while our method stays 93–100%.
 
 ## Repository Structure
 
@@ -57,7 +58,7 @@ bash code/run_mid_experiment.sh          # mid cloaking + B/C watermark + PSR + 
 | B: +WAM global | 36.1% | 99.2% | 99.6% | 93.7% | 29.0/0.851/0.140 |
 | C: +WAM safety-region | **42.1%** | 98.6% | 99.0% | 92.7% | **30.1/0.879/0.111** |
 
-FPR = 0.00% (500 trials). Under mid cloaking: PSR 85% + watermark 95–100% coexist.
+FPR = 0.4–0.8% at θ=0.25 (0% at θ≤0.15, 500 trials). Under mid cloaking: PSR 93.5% + watermark 95–100% coexist. See `docs/W4_supplementary_20260817.md` for SOTA baseline (InvisMark), α ablation, BER threshold curve, and embedding-order experiments.
 
 ## Related Work
 

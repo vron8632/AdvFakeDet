@@ -37,3 +37,12 @@ demo/
 
 # Git
 .git/
+runs2/
+paper/texmf/
+# baselines weights (regenerate/download)
+baselines/wam/checkpoints/*.pth
+baselines/wam/*.zip
+baselines/fawkes/fawkes/model/*.h5
+baselines/invismark/*.ckpt
+.pi/
+_skills/

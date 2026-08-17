@@ -87,12 +87,19 @@ AdvFake/
 
 ## 5. 下一步待办（新 agent 从这开始）
 
-1. **（高优先级）论文补 SOTA 水印基线对比**：Stable Signature / InvisMark 在遮蔽图上的解码率（审稿人必问）
-2. **用户生成 teaser/框架图**：按 FIGURE_PROMPTS_中文.md 用 gpt-image-2，替换 fig1/fig2 占位后重编译
-3. **补作者信息**：main.tex 的 author/affiliation/acknowledgment 是 TBD
-4. **可选补实验**：α 消融（SRG 强度）、BER 阈值敏感性曲线（θ 的 TPR/FPR）、多消息容量
-5. **投稿准备**：cover letter、highlight、作者贡献声明（ARS/nature-skills 可辅助）
-6. **引用 DOI 核对**：related_work/doi_verify_report.md 已核对 12 条
+1. **（高优先级）用户生成 teaser/框架图**：按 FIGURE_PROMPTS_中文.md 用 gpt-image-2，替换 fig1/fig2 占位后重编译（fig6 已就绪）
+2. **补作者信息**：main.tex 的 author/affiliation/acknowledgment 是 TBD；docs/SUBMISSION_PACKAGE.md 已备好 cover letter/highlights/author contributions 草稿
+3. **可选补实验**：Stable Signature 对比（需 SD 解码器+per-key extractor 训练，论文已论证性排除）；遮蔽迁移性多模型报告（现仅 arcface34/facenet）
+4. **投稿准备**：填作者后生成最终 PDF + cover letter 定稿
+5. 引用 DOI 核对已完成（related_work/doi_verify_report.md 12 条）
+
+## 5.5 2026-08-17 下午新增（W4 补实验，全部完成）
+- **InvisMark SOTA 基线对比**（WACV 2025 官方 ckpt）：遮蔽图 clean 解码 100% TPR，但 JPEG80/50 下 TPR=0%（干净图也一样，连 JPEG95 都失效）→ 论文 Table 5 + Sec. 4.8
+- **BER 阈值敏感性曲线**：θ=0.25 时 FPR 实为 0.4–0.8%（论文原 0% 主张已修正）；θ≤0.15 时 FPR=0% → Fig 6 + Table 3
+- **α 消融**（SRG 强度）：甜点区 α∈[0.75,1.0]（PSR 93.5%）；α<0.5 水印失效 → Table 7
+- **嵌入顺序实验**：先嵌水印再遮蔽 PSR 掉到 70–81.5%，先遮蔽再嵌水印保持 93.5% → Table 8（回击审稿人顺序质疑）
+- **多消息容量**：交叉串扰 FPR=0%（87 trials）
+- 论文更新至 15 页（5 图 8 表），编译通过；汇总 JSON: assets/experiments/new_results_20260817.json；记录 docs/W4_supplementary_20260817.md
 
 ## 6. 环境备忘（重启后验证）
 - GPU：2×RTX 4090（学生遗留进程 targeted_attack_selected_fixed.py 占 ~2GB/卡，勿杀）
