@@ -1,5 +1,8 @@
 # Signal Processing: Image Communication 投稿指南
 
+> **逐步操作版请看** [`SUBMISSION_STEP_BY_STEP.md`](SUBMISSION_STEP_BY_STEP.md)
+> 本文档提供背景信息和参考。
+
 > 目标期刊: Signal Processing: Image Communication (Elsevier)
 > ISSN: 0923-5965 | JCR: Q2 (Engineering, Electrical & Electronic) | 非 OA
 > 2024 IF: ~3.5 | 审稿周期: 首轮 2-3 个月
