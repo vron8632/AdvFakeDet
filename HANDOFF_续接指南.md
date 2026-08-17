@@ -1,79 +1,102 @@
-# AdvFake 项目续接指南（HANDOFF）
+# AdvFakeDet 项目续接指南（HANDOFF v2）
 
-> 生成：2026-08-16 | 用途：重启/新 pi agent 快速进入状态
-> 项目根：`/media/oyp/数据/Projects/042_image_forensic/AdvFake/`
+> 生成：2026-08-17 09:30 | 用途：重启/新 pi agent 快速进入状态
+> 项目根：`/home/jiujiu/Projects/AdvFake/` | GitHub: `vron8632/AdvFakeDet` (main)
 
 ## 1. 项目在做什么（30 秒版）
 
-学生论文项目：**给"对抗人脸"嵌入可溯源水印**——让人脸识别继续被骗（对抗身份保持），同时水印可解码（溯源/版权），且不可感知。
-已核查的学术定位：**"对抗+水印双保护"框架已被 EIAW (BDMA 2026) 等发表**，我们的差异化方向 = **"Fawkes 式整图遮蔽 + 频域约束 + 溯源水印"**（避开学生已做的补丁攻击+空间安全图路线）。
+**论文项目**：给 Fawkes 遮蔽人脸嵌入可溯源神经网络水印（WAM），让人脸识别继续被骗（遮蔽保持）+ 水印可解码（溯源）+ JPEG 鲁棒。
+**目标期刊**：JCR Q2 非 OA（SPIC / JVCIR / JISA，Elsevier）
+**核心定位**：Provenance-Verifiable Privacy Cloaking —— 顺序嵌入 + 安全区域图（SRG）+ 强度校准 + BER 检测。
 
-## 2. 已完成工作清单
+## 2. 已完成清单
 
-### 2.1 解压与数据（完成 ✅）
-- `newpatch.tar` → `AdvFake/newpatch/`（281,834 文件，4.1G）
-- `res_else.zip` → `AdvFake/res/`（2.4G，后台续传完成）
-- ⚠️ 少量文件名含 `*` 的图片无法在 Linux 创建（Windows 遗留名，不影响代码）
-- ⚠️ 所有脚本硬编码 `/workspace/zsy/...` 路径（原服务器），本机运行需改路径或软链
+### 2.1 环境（miniconda，全 GPU 就绪）
+- `fawkes` 环境：py3.8 + TF 2.4.1 + CUDA 11.2（修复 libcusolver symlink）—— Fawkes 遮蔽
+- `newpatch` 环境：py3.8 + torch 2.4.1+cu118 + facenet_pytorch + WAM 依赖（修复 py3.8 注解兼容）
+- 代理：Clash Verge @ 127.0.0.1:7897（GitHub/HF 下载、tectonic 编译需走代理）
+- Gemini key（AQ. 开头）**不可用于 API**（401 blocked）；DeepSeek API key 可用（bashrc 里 DEEPSEEK_API_KEY）
 
-### 2.2 学生项目剖析（完成 ✅，结论见 EIAW_解读.md 第 4 节）
-- 流水线：RL 黑盒补丁攻击（newpatch-rl, TPAMI'22）→ AISM 精修 → 空间安全区域图 S=(1−P)(1−R) → WAM 水印嵌入 → 噪声鲁棒评估
-- 主实验数字：facenet 定向攻击 1000 样本 95.6% 成功率；水印后 clean 身份保持 93.8%（exact 77.8%）；水印 TPR clean 100%
-- **关键漏洞**：①评估集是"最容易"子集（top2 间隔中位数 0.0098 vs 随机 0.22）；②黑盒但画廊已知；③安全图未用于主实验；④JPEG≤80 击穿水印；⑤无任何 SOTA 对比
+### 2.2 数据与权重（assets/ 已 gitignore）
+- LFW 1000 随机子集（771 身份）: `assets/dataset/lfw1000/`
+- WAM checkpoint 289MB: `baselines/wam/checkpoints/checkpoint.pth` + params.json
+- Fawkes extractor_0/2: `baselines/fawkes/fawkes/model/`（md5 已校验）
+- 微调 checkpoint: `assets/experiments/wam_jpeg_ft*/`、`wam_cloak_ft/`（效果不佳，供参考）
 
-### 2.3 文献调研（完成 ✅）
-- EIAW 原文已下载解读（见下）；EIAW 期刊 = BDMA（IF 6.1，中科院 1 区，OA 免费，审稿 ~8 周）
-- 三路检索（OpenAlex/arXiv/GitHub）确认：**该小方向无高 star 2025/2026 顶会基线**
-- 高 star 基线实测：Fawkes 5585★、WAM 1137★、Stable Signature 524★、InvisMark 57★（WACV'25）、LampMark 15★、ROBIN 45★、Adv-Makeup 77★
+### 2.3 关键实验（全部跑完）
+**low 遮蔽 1000 张（β=6）**：
+| 组 | PSR | WM clean/JPEG80/JPEG50 | PSNR/SSIM/LPIPS |
+|---|---|---|---|
+| A cloak | 47.4% | — | ~40/0.98/0.01 |
+| B 全局 | 36.1% | 99.2/99.6/93.7% | 29.0/0.851/0.140 |
+| C 安全图 | 42.1% | 98.6/99.0/92.7% | 30.1/0.879/0.111 |
+FPR=0%（500 次）
 
-### 2.4 Fawkes 最小样例（完成 ✅）
-- 仓库：`baselines/fawkes/`（Shawn-Shan/fawkes，USENIX Security 2020）
-- 环境：conda env `fawkes`（Python 3.8 + TF 2.4.1 + keras 2.4.3 + mtcnn）
-- 权重：extractor_2.h5（161MB，自动从 mirror.cs.uchicago.edu 下载到 ~/.keras/models/）
-- 运行：`conda activate fawkes && cd baselines/fawkes && python3 -m fawkes.protection -d <图片目录> -m low --format jpg --gpu 0`
-- 验证：3 张 LFW 图，~14s/张（CPU），PSNR 38.6–41.8dB，SSIM 0.9987–0.9995
-- 样例输出：`demo/fawkes_mini_example/`（原图 + *_cloaked.jpeg）
+**mid 遮蔽 200 张（β=6）**：
+| 组 | PSR | WM clean/JPEG80/JPEG50 | sim |
+|---|---|---|---|
+| A | 95.0% | — | 0.054 |
+| B | 94.0% | 100/100/93.5% | 0.114 |
+| C | 93.5% | 99.5/100/95.0% | 0.083 |
+
+**E 组（联合优化对比）**：顺序嵌入（C）≈ 联合优化（PSR 85% + 水印 100%），回应 EIAW Table 9。
+
+**遮蔽-水印冲突（核心发现）**：clean 99.8%（TPR@95% 98%）→ cloak 85.2%（6%）。
+
+### 2.4 论文（已完成初稿，编译成功）
+- `paper/main.tex` + `main.pdf`（10 页，elsarticle 模板，5 图 4 表）
+- 故事线：背景→冲突（遮蔽破水印/水印破遮蔽/ARFP 撞车）→方法（SRG+强度校准+BER）→结果（共存）
+- 图：fig3 定性、fig4 主结果、fig5 JPEG 鲁棒（matplotlib 已画）；fig1 teaser + fig2 框架为 16:9 占位
+- 中文 prompt：`paper/FIGURE_PROMPTS_中文.md`（用户用 gpt-image-2 生成后覆盖占位图）
+
+### 2.5 GitHub 已提交
+- `vron8632/AdvFakeDet` main 分支（46dd58a, 44a67f0 两次提交）
+- code/（27 脚本）、paper/、docs/、related_work/、README
+- .gitignore 排除权重/数据/学生代码
 
 ## 3. 关键文件索引
 
 ```
 AdvFake/
-├── newpatch/                      ← 学生代码+数据（LFW 13233张、模型权重）
-├── res/                           ← 学生实验结果（zip 解压）
-├── baselines/fawkes/              ← Fawkes 官方代码（已跑通）
-├── demo/fawkes_mini_example/      ← Fawkes 最小样例输出
-└── related_work/
-    ├── EIAW_2026_Image_Copyright_Dual-Protection.pdf   ← EIAW 原文（CC-BY OA）
-    ├── EIAW_2026_pdf_text.txt                          ← 全文文本（含9张表格）
-    ├── EIAW_2026_ieee_page_fulltext.md                 ← IEEE 全文备份
-    ├── EIAW_解读.md                                    ← EIAW 通俗解读+与学生对标
-    ├── baseline_and_venue_plan.md                      ← 基线清单+投稿策略（JCR Q2/CCF-C）
-    ├── experiment_plan_Fawkes_WAM.md                   ← 最小实验方案（4周闭环）
-    └── novelty_report_relatedwork.md                   ← Novelty 报告+Related Work 初稿
+├── code/
+│   ├── 01_data_prep/build_lfw1000.py    # 1000 子集
+│   ├── 02_fawkes_cloak/cloak_api.py     # 自定义强度遮蔽（Python API）
+│   ├── 03_wam_watermark/embed_wam.py    # WAM 嵌入（global/safety_map + scaling_w）
+│   ├── 04_safety_map/gen_safety_map.py  # FR 敏感度安全图
+│   ├── 05_freq_constraint/e_group_joint.py  # E 组联合优化
+│   ├── 06_eval/eval_psr.py              # PSR 标准评估（extractor2/facenet）
+│   ├── 06_eval/eval_wam_decode.py       # 水印 BER 解码评估
+│   └── 06_eval/make_paper_figures.py    # 论文图表
+├── paper/main.tex + main.pdf            # 论文（elsarticle）
+├── paper/FIGURE_PROMPTS_中文.md          # 配图 prompt
+├── docs/
+│   ├── MASTER_PLAN.md                   # 主计划
+│   ├── EXPERIMENT_AUDIT.md              # 实验核查（重要发现）
+│   ├── NOVELTY_AUDIT_v2.md              # 新颖性（ARFP 撞车分析）
+│   └── W1/W2/W23_*.md                   # 实施记录
+└── related_work/                        # EIAW、ARFP 全文 + 解读
 ```
 
-## 4. 核心结论速查（引用时避免重复劳动）
+## 4. 关键经验教训（避免重复劳动）
 
-| 问题 | 结论 |
-|---|---|
-| 学生论文有 SOTA 对比吗 | ❌ 无，只有内部消融 |
-| 创新性真实吗 | 组合型创新，非开创型；安全区域图机制+身份一致性评估是亮点，但主实验没用安全图 |
-| EIAW 是威胁吗 | 是，必须引用并区分（频域联合优化 vs 空间补丁+独立水印） |
-| 推荐方向 | Fawkes 遮蔽 + 频域约束 + 溯源水印（避开学生已有路线） |
-| 目标期刊 | JISA / SPIC / JVCIR（JCR Q2/CCF-C）；扎实可冲 BDMA 与 EIAW 同刊对打 |
-| 投稿时间表 | 4 个月：W1 痛点+novelty → W2 环境 → W3-8 实验 → W9-10 写作 → W11-14 投稿 |
+1. **遮蔽迁移性**：Fawkes 对所有未知 FR 模型（arcface34/facenet）PSR≈0%，只在训练提取器（extractor_2）有效（mid 95%）。论文已诚实定位（遮蔽有效性入局限）。
+2. **评估协议**：必须用 PSR（画廊-查询识别）；arcface 需学生流程（landmark 对齐+无归一化）；sim 阈值（0.4）在 extractor_2 上不可靠（区分度差）。
+3. **WAM 微调失败**：JPEG-heavy 微调（8/30 epochs）未改善（权重加载 bug 已修，但微调本身效果差）；sw6 强度校准才是有效方案。
+4. **推理时频域滤波无效**（WAM 依赖高频）；BER 检测协议是 JPEG 鲁棒的关键。
+5. **ARFP（arXiv:2605.01217）撞车**：已做遮蔽+可验证信息（可逆路线）→ 我们差异化：溯源语义 + 顺序嵌入 + SRG + BER 协议。
 
 ## 5. 下一步待办（新 agent 从这开始）
 
-1. **（高优先级）校对 related work 参考文献 DOI**：novelty_report 第 5 节部分 DOI 是按记忆填的，需逐条用 Crossref/OpenAlex 核对
-2. 安装 `facenet_pytorch` 到 fawkes 或 torch2.9 环境，验证 Fawkes 遮蔽的 FR 逃避效果（原服务器有，本机无）
-3. 从 facebookresearch/watermark-anything 重新下载 WAM checkpoint（**学生压缩包里没有**，只被日志引用）
-4. 按 `experiment_plan_Fawkes_WAM.md` 跑 A/B/C/D 四组对照（Fawkes→WAM→安全区/频域）
-5. 补 EIAW Table 9 的反驳实验：顺序嵌入（遮蔽+水印）vs 联合优化
+1. **（高优先级）论文补 SOTA 水印基线对比**：Stable Signature / InvisMark 在遮蔽图上的解码率（审稿人必问）
+2. **用户生成 teaser/框架图**：按 FIGURE_PROMPTS_中文.md 用 gpt-image-2，替换 fig1/fig2 占位后重编译
+3. **补作者信息**：main.tex 的 author/affiliation/acknowledgment 是 TBD
+4. **可选补实验**：α 消融（SRG 强度）、BER 阈值敏感性曲线（θ 的 TPR/FPR）、多消息容量
+5. **投稿准备**：cover letter、highlight、作者贡献声明（ARS/nature-skills 可辅助）
+6. **引用 DOI 核对**：related_work/doi_verify_report.md 已核对 12 条
 
-## 6. 环境备忘
-
-- 本机 miniconda envs：`fawkes`（TF2.4.1, 已装好）、`torch2.9`、`torch2.4`、`apjf`、`aitalk` 等
-- GitHub API / arXiv API 对本机 IP 有反爬限流（429/404），批量检索需限速重试
-- browser-act 的 stealth-extract 可绕过 IEEE 等反爬（本机已配置）
-- 学生原服务器路径：`/workspace/zsy/`（模型、WAM checkpoint、微调数据都在那，压缩包未含）
+## 6. 环境备忘（重启后验证）
+- GPU：2×RTX 4090（学生遗留进程 targeted_attack_selected_fixed.py 占 ~2GB/卡，勿杀）
+- conda：fawkes（TF）、newpatch（torch）两个环境
+- 代理：http://127.0.0.1:7897（git push / tectonic / HF 下载需用）
+- 后台任务：无（全部完成）
+- 学生数据路径：/home/jiujiu/workspace/zsy/（原始压缩包）
