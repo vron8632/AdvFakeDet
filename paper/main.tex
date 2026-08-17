@@ -23,7 +23,7 @@
   country={Country}}
 
 \begin{abstract}
-Privacy-cloaking techniques such as Fawkes protect face images from unauthorized face recognition (FR) by adding imperceptible perturbations; however, cloaked images carry no verifiable provenance, allowing anyone to republish a victim's cloaked face without accountability. This paper studies \emph{provenance-verifiable privacy cloaking}: embedding a decodable neural watermark into cloaked faces so that FR evasion is preserved, the watermark remains detectable, and detection is robust to JPEG compression. We first reveal a fundamental conflict: Fawkes cloaking reduces WAM watermark decoding from 99.8\% bit accuracy (98\% TPR@95\%) on clean faces to 85.2\% (6\%) on cloaked faces, quantifying, for the first time, how adversarial cloaking damages neural watermarks. We then propose two complementary mechanisms. (1) \emph{Safety-region guidance} (SRG) computes an FR-sensitivity map from surrogate gradients and embeds watermarks preferentially in FR-insensitive regions, raising cloaking retention under strong watermarking from 36.1\% to 42.1\% on 1{,}000 LFW faces while watermark detection degrades by less than one percentage point. (2) \emph{Strength-calibrated embedding with BER-based detection} increases watermark detectability from 6\% to 57.9\% (TPR@95\%) and to 99.2\%/99.6\%/93.7\% under BER$\le$0.25 detection for clean/JPEG80/JPEG50, at a false-positive rate of 0.4\%--0.8\% (0\% at $\theta\le0.15$). Under stronger cloaking (Fawkes mid, 85\% protection success rate), watermarking coexists losslessly: retention is unchanged and detection reaches 95--100\%. Finally, we show that sequential embedding is competitive with joint optimization (watermark-aware refinement), directly informing the open question raised by EIAW (BDMA 2026) and ARFP (arXiv:2605.01217). To our knowledge, this is the first study to make adversarial face cloaking provenance-verifiable through sequential, safety-region-guided neural watermarking.
+Privacy-cloaking techniques such as Fawkes protect face images from unauthorized face recognition (FR) by adding imperceptible perturbations; however, cloaked images carry no verifiable provenance, allowing anyone to republish a victim's cloaked face without accountability. This paper studies \emph{provenance-verifiable privacy cloaking}: embedding a decodable neural watermark into cloaked faces so that FR evasion is preserved, the watermark remains detectable, and detection is robust to JPEG compression. We first quantify the deployment bottleneck: WAM watermark decoding is highly JPEG-fragile, and cloaked faces are slightly more fragile than clean ones---under JPEG75 recompression (typical sharing platforms), TPR@95\% collapses from 99.4\% (true clean) to 6.0\% on cloaked faces (14.0\% on clean), while at the pixel level cloaking alone does not degrade decoding (99.89\% vs.\ 99.84\% bit accuracy). We then propose two complementary mechanisms. (1) \emph{Safety-region guidance} (SRG) computes an FR-sensitivity map from surrogate gradients and embeds watermarks preferentially in FR-insensitive regions, raising cloaking retention under strong watermarking from 36.1\% to 42.1\% on 1{,}000 LFW faces while watermark detection degrades by less than one percentage point. (2) \emph{Strength-calibrated embedding with BER-based detection} increases watermark detectability under JPEG75 from 6.0\% to 57.9\% (TPR@95\%) and to 100\%/99.6\%/93.7\% under BER$\le$0.25 detection for true-clean/JPEG80/JPEG50, at a false-positive rate of 0.2--0.6\% under deployment conditions (0\% at $\theta\le0.15$). Under stronger cloaking (Fawkes mid, 85\% protection success rate), watermarking coexists losslessly: retention is unchanged and detection reaches 95--100\%. Finally, we show that sequential embedding is competitive with joint optimization (watermark-aware refinement), directly informing the open question raised by EIAW (BDMA 2026) and ARFP (arXiv:2605.01217). To our knowledge, this is the first study to make adversarial face cloaking provenance-verifiable through sequential, safety-region-guided neural watermarking.
 \end{abstract}
 
 \begin{keyword}
@@ -44,14 +44,14 @@ Face recognition \sep privacy cloaking \sep neural watermarking \sep JPEG robust
 
 Face recognition (FR) systems are deployed across authentication, surveillance, and social media, yet they raise serious privacy concerns: facial images shared online can be scraped and enrolled into databases without consent. Adversarial privacy cloaking---most notably Fawkes~\cite{shan2020fawkes}, LowKey~\cite{zhou2021lowkey}, and Glaze~\cite{shan2024glaze}---adds imperceptible perturbations so that unauthorized FR models misidentify the subject. These methods are effective at \emph{destroying recognition}, but they leave the protected image \textbf{without any verifiable provenance}: anyone can download, republish, or re-upload a victim's cloaked face with no mechanism to attribute, or refute, its origin.
 
-Digital watermarking~\cite{zhu2018hiddendet,zhang2020stegastamp,ruiz2024wam,fernandez2024stable} embeds a decodable ownership signal into images. Yet watermarking is designed for \emph{clean} images; when applied to \emph{cloaked} (adversarially perturbed) faces, the two objectives conflict: the cloaking perturbation distorts the watermark, and the watermark perturbs the face, weakening the cloak. EIAW~\cite{liu2026eiaw} demonstrated this conflict for generic image classification and advocated joint optimization of attack and watermark. ARFP~\cite{zhang2026arfp} recently proposed reversible face protection with keyed recovery and tamper indication, yet it follows the joint-training paradigm and targets recovery rather than attribution. Whether a \emph{sequential} pipeline---cloak first, watermark second---can make face cloaking provenance-verifiable remains an open question, and no prior work studies identity-level cloaking retention under neural watermarking.
+Digital watermarking~\cite{zhu2018hiddendet,zhang2020stegastamp,ruiz2024wam,fernandez2024stable} embeds a decodable ownership signal into images. Yet watermarking is designed for \emph{clean} images that are distributed as-is; in practice, cloaked faces are recompressed (JPEG) by sharing platforms, and the watermark must survive that channel while the watermark perturbation itself must not weaken the cloak. EIAW~\cite{liu2026eiaw} demonstrated a similar conflict for generic image classification and advocated joint optimization of attack and watermark. ARFP~\cite{zhang2026arfp} recently proposed reversible face protection with keyed recovery and tamper indication, yet it follows the joint-training paradigm and targets recovery rather than attribution. Whether a \emph{sequential} pipeline---cloak first, watermark second---can make face cloaking provenance-verifiable remains an open question, and no prior work studies identity-level cloaking retention under neural watermarking with deployment-condition JPEG robustness.
 
 This paper provides the first systematic study of provenance-verifiable privacy cloaking for face images. Our contributions are:
 
 \begin{enumerate}
-\item \textbf{Quantifying the cloaking--watermark conflict.} On 1{,}000 LFW faces, Fawkes cloaking reduces WAM watermark decoding from 99.8\% bit accuracy (98\% TPR@95\%) to 85.2\% (6\% TPR@95\%). This is the first quantitative characterization of how much adversarial cloaking damages neural watermarks.
+\item \textbf{Quantifying the JPEG-fragility bottleneck of watermarking cloaked faces.} Under JPEG75 recompression (typical of sharing platforms), default-strength WAM decoding collapses on cloaked faces from 99.4\% to 6.0\% TPR@95\%---and cloaked faces are measurably more fragile than clean ones (85.2\% vs.\ 88.3\% bit accuracy). At the pixel level, cloaking alone does not degrade decoding (99.89\% vs.\ 99.84\%), isolating JPEG recompression as the deployment bottleneck that must be addressed.
 \item \textbf{Safety-region guidance (SRG).} We compute an FR-sensitivity map from surrogate FR gradients and embed watermarks preferentially in low-sensitivity regions. SRG raises cloaking retention under strong watermarking from 36.1\% (global embedding) to 42.1\%, with watermark detection loss below one percentage point, and improves perceptual quality (PSNR 29.0$\rightarrow$30.1 dB).
-\item \textbf{Strength-calibrated embedding with BER-based detection.} Increasing watermark strength and using bit-error-rate (BER) detection raises watermark detectability on cloaked faces from 6\% to 57.9\% (TPR@95\%), and to 99.2\%/99.6\%/93.7\% under BER$\le$0.25 for clean/JPEG80/JPEG50, at 0.4--0.8\% false-positive rate on unwatermarked images (0\% at $\theta\le0.15$).
+\item \textbf{Strength-calibrated embedding with BER-based detection.} Increasing watermark strength and using bit-error-rate (BER) detection raises watermark detectability under deployment JPEG75 from 6.0\% to 57.9\% (TPR@95\%), and to 100\%/99.6\%/93.7\% under BER$\le$0.25 for true-clean/JPEG80/JPEG50, at 0.2--0.6\% false-positive rate on unwatermarked cloaked faces (0\% at $\theta\le0.15$).
 \item \textbf{Sequential embedding is competitive with joint optimization.} We implement watermark-aware joint refinement and show that our sequential pipeline (cloak $\rightarrow$ SRG-guided WAM) matches joint optimization in both cloaking retention (85\% PSR) and watermark detection (100\% BER$\le$0.25), directly informing the sequential-vs-joint debate raised by EIAW~\cite{liu2026eiaw} and ARFP~\cite{zhang2026arfp}.
 \end{enumerate}
 
@@ -125,7 +125,7 @@ We adopt the standard \emph{protection success rate} (PSR) protocol~\cite{zhang2
 \begin{figure}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig4_main_results.png}
-\caption{Main results. (a) Bit-accuracy distributions on clean vs.\ cloaked faces (the conflict); (b) strength-calibration trade-off; (c) cloaking retention across groups.}
+\caption{Main results. (a) Bit-accuracy distributions under JPEG75 on clean vs.\ cloaked faces (the deployment bottleneck); (b) strength-calibration trade-off; (c) cloaking retention across groups.}
 \label{fig:main}
 \end{figure}
 
@@ -146,13 +146,30 @@ We adopt the standard \emph{protection success rate} (PSR) protocol~\cite{zhang2
 \subsection{Setup}
 \textbf{Data.} 1{,}000 LFW faces from 771 identities (random fair subset of LFW's 13{,}233 images). \textbf{Cloaking.} Fawkes low/mid modes (official implementation). \textbf{Watermark.} WAM (32-bit messages), strength $\beta \in \{2,6\}$. \textbf{FR surrogates.} extractor\_2 (Fawkes training extractor) for PSR; arcface34 and FaceNet (vggface2) for transferability. \textbf{Safety map.} arcface34 gradients (Eq.~\ref{eq:saliency}). \textbf{Metrics.} PSR (cloaking retention), watermark TPR (BER$\le$0.25), FPR, PSNR/SSIM/LPIPS.
 
-\subsection{The Cloaking--Watermark Conflict}
+\subsection{The JPEG-Fragility Bottleneck of Watermarking Cloaked Faces}
 \label{sec:conflict}
-On clean LFW faces, WAM ($\beta{=}2$) achieves 99.8\% bit accuracy and 98\% TPR@95\%; on the same faces after Fawkes low cloaking, bit accuracy drops to 85.2\% and TPR@95\% to 6.0\% (n=1{,}000). Fig.~\ref{fig:main}(a) visualizes per-face bit accuracy before/after cloaking. This quantifies the conflict that motivates this work.
+Table~\ref{tab:conflict} isolates the effect of cloaking vs.\ JPEG recompression on WAM decoding (default strength $\beta{=}2$). At the pixel level (true clean), cloaking alone does \emph{not} degrade decoding: bit accuracy is 99.89\% on cloaked faces vs.\ 99.84\% on clean faces. The bottleneck is JPEG recompression---the default format of sharing platforms---which collapses TPR@95\% to 14.0\% (clean) and 6.0\% (cloaked) under JPEG75, and cloaked faces are measurably more fragile (85.2\% vs.\ 88.3\% bit accuracy at JPEG75). This reframes the challenge precisely: provenance verification must survive the JPEG channel on cloaked faces, which default-strength WAM does not.
+
+\begin{table}[t]
+\caption{Decomposing the cloaking and JPEG effects on WAM decoding ($\beta{=}2$, n=1{,}000 cloaked / 100 clean).}
+\label{tab:conflict}
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Condition & bit acc. & TPR@95\% & TPR@99\% \\
+\midrule
+Clean faces, true clean     & 99.84\% & 98.0\% & 98.0\% \\
+Cloaked faces, true clean   & 99.89\% & 99.4\% & 97.8\% \\
+Clean faces, JPEG75         & 88.25\% & 14.0\% & 1.0\% \\
+Cloaked faces, JPEG75       & 85.19\% & \textbf{6.0\%} & 1.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Main Results (Low Cloaking, n=1,000)}
 \label{sec:main}
-Table~\ref{tab:main} reports the main comparison with $\beta{=}6$. Global strong watermarking (B) breaks cloaking: PSR drops from 47.4\% to 36.1\%. Safety-region guidance (C) recovers PSR to 42.1\% with less than one percentage point of watermark loss (98.6\% vs.\ 99.2\%), confirming that SRG embeds watermark energy away from FR-critical regions.
+Table~\ref{tab:main} reports the main comparison with $\beta{=}6$, evaluated at true clean and under JPEG80/50. Global strong watermarking (B) breaks cloaking: PSR drops from 47.4\% to 36.1\%. Safety-region guidance (C) recovers PSR to 42.1\% with less than one percentage point of watermark loss (100\% vs.\ 100\% at true clean; 99.0\% vs.\ 99.6\% at JPEG80), confirming that SRG embeds watermark energy away from FR-critical regions.
 
 \begin{table}[t]
 \caption{Main comparison on 1{,}000 LFW faces with low cloaking ($\beta{=}6$). WM = watermark detection TPR under BER$\le$0.25.}
@@ -164,36 +181,36 @@ Table~\ref{tab:main} reports the main comparison with $\beta{=}6$. Global strong
 Group & PSR$\uparrow$ & WM clean & WM JPEG80 & WM JPEG50 & PSNR/SSIM/LPIPS \\
 \midrule
 A: cloak (no WM)      & 47.4\% & -- & -- & -- & $\sim$40/~0.98/~0.01 \\
-B: +WAM global        & 36.1\% & 99.2\% & 99.6\% & 93.7\% & 29.0/0.851/0.140 \\
-C: +WAM safety-region & \textbf{42.1\%} & 98.6\% & 99.0\% & 92.7\% & \textbf{30.1/0.879/0.111} \\
+B: +WAM global        & 36.1\% & 100\% & 99.6\% & 93.7\% & 29.0/0.851/0.140 \\
+C: +WAM safety-region & \textbf{42.1\%} & 100\% & 99.0\% & 92.7\% & \textbf{30.1/0.879/0.111} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Strength Calibration}
 \label{sec:ablation}
-Table~\ref{tab:strength} shows that strength is the decisive factor: increasing $\beta$ from 2 to 6 raises clean TPR@95\% from 6.0\% to 57.9\%, at a perceptual cost of PSNR 38$\rightarrow$30 dB. Combined with BER detection, TPR reaches 93--99\% (Table~\ref{tab:main}).
+Table~\ref{tab:strength} shows that strength is the decisive factor for the deployment bottleneck: under JPEG75, increasing $\beta$ from 2 to 6 raises TPR@95\% from 6.0\% to 57.9\%, at a perceptual cost of PSNR 38$\rightarrow$30 dB. At true clean, both strengths already decode near-perfectly (99.4\% vs.\ 99.7\% TPR@95\%); strength is what buys JPEG robustness. Combined with BER detection, TPR reaches 93--100\% (Table~\ref{tab:main}).
 
 \begin{table}[t]
 \caption{Effect of watermark strength $\beta$ (n=1,000, global embedding).}
 \label{tab:strength}
 \centering
 \small
-\begin{tabular}{lcccc}
+\begin{tabular}{lccccc}
 \toprule
-$\beta$ & clean TPR@95\% & JPEG80 TPR@95\% & JPEG50 TPR@95\% & PSNR (dB) \\
+$\beta$ & true-clean TPR@95\% & JPEG75 TPR@95\% & JPEG80 TPR@95\% & JPEG50 TPR@95\% & PSNR (dB) \\
 \midrule
-2.0 & 6.0\% & 16.2\% & 0.3\% & $\sim$38 \\
-6.0 & \textbf{57.9\%} & \textbf{64.6\%} & 10.0\% & $\sim$30 \\
+2.0 & 99.4\% & 6.0\% & 16.2\% & 0.3\% & $\sim$38 \\
+6.0 & 99.7\% & \textbf{57.9\%} & \textbf{64.6\%} & 10.0\% & $\sim$30 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{False-Positive Analysis and Threshold Sensitivity}
-On 100 unwatermarked cloaked faces decoded against random messages (500 trials), the BER of false detections concentrates around 0.50 (mean 0.500). Fig.~\ref{fig:bercurve} reports the TPR/FPR trade-off as a function of the detection threshold $\theta$: at $\theta=0.25$, FPR is 0.4\% (low) and 0.8\% (mid); tightening to $\theta\le0.15$ yields 0\% FPR in 500 trials while retaining TPR $\ge93\%$ (Table~\ref{tab:ber}). This makes the detector highly specific and lets practitioners trade TPR against FPR by choosing $\theta$.
+On 100 unwatermarked cloaked faces decoded against random messages (500 trials), the BER of false detections concentrates around 0.50 (mean 0.496--0.500). Under the matched deployment condition (JPEG75 on both positives and negatives), Fig.~\ref{fig:bercurve} reports the TPR/FPR trade-off as a function of the detection threshold $\theta$: at $\theta=0.25$, TPR is 99.2\% (low B), 98.6\% (low C), and 100\% (mid) at FPR 0.2--0.6\%; tightening to $\theta\le0.15$ yields 0\% FPR in 500 trials while retaining TPR $\ge93\%$ (Table~\ref{tab:ber}). This makes the detector highly specific and lets practitioners trade TPR against FPR by choosing $\theta$.
 
 \begin{table}[t]
-\caption{BER threshold sensitivity: TPR (watermarked cloaked faces) vs.\ FPR (unwatermarked, 500 trials).}
+\caption{BER threshold sensitivity under deployment JPEG75: TPR (watermarked cloaked faces) vs.\ FPR (unwatermarked, 500 trials).}
 \label{tab:ber}
 \centering
 \small
@@ -203,8 +220,8 @@ $\theta$ & TPR B (low) & TPR C (low) & TPR B (mid) & FPR (low / mid) \\
 \midrule
 0.15 & 95.2\% & 93.1\% & 95.0\% & 0.00\% / 0.00\% \\
 0.20 & 98.7\% & 97.4\% & 100\%  & 0.20\% / 0.00\% \\
-0.25 & 99.2\% & 98.6\% & 100\%  & 0.40\% / 0.80\% \\
-0.30 & 99.4\% & 98.9\% & 100\%  & 1.00\% / 2.40\% \\
+0.25 & 99.2\% & 98.6\% & 100\%  & 0.20\% / 0.60\% \\
+0.30 & 99.4\% & 98.9\% & 100\%  & 0.40\% / 1.80\% \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -223,7 +240,7 @@ Group & PSR$\uparrow$ & WM clean & WM JPEG80 & WM JPEG50 & sim$\downarrow$ \\
 \midrule
 A: cloak (no WM)      & 95.0\% & -- & -- & -- & 0.054 \\
 B: +WAM global        & 94.0\% & 100\% & 100\% & 93.5\% & 0.114 \\
-C: +WAM safety-region & 93.5\% & 99.5\% & 100\% & \textbf{95.0\%} & \textbf{0.083} \\
+C: +WAM safety-region & 93.5\% & 100\% & 100\% & \textbf{95.0\%} & \textbf{0.083} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -242,7 +259,7 @@ We compare against InvisMark~\cite{chen2025invis} (WACV 2025), a representative 
 Method & PSR$\uparrow$ & WM clean & WM JPEG80 & WM JPEG50 & PSNR/SSIM \\
 \midrule
 B: WAM global ($\beta{=}6$)  & 94.0\% & 100\% & 100\% & 93.5\% & 29.0/0.851 \\
-C: WAM safety-region ($\beta{=}6$) & \textbf{93.5\%} & 99.5\% & 100\% & \textbf{95.0\%} & 30.1/0.879 \\
+C: WAM safety-region ($\beta{=}6$) & \textbf{93.5\%} & 100\% & 100\% & \textbf{95.0\%} & 30.1/0.879 \\
 InvisMark (official ckpt) & \textbf{94.5\%} & 100\% (95.1\%) & 0.0\% (49.7\%) & 0.0\% (50.2\%) & \textbf{49.6/0.991} \\
 \bottomrule
 \end{tabular}
@@ -318,7 +335,7 @@ Fawkes cloaking transfers poorly to FR models in distant feature spaces: under o
 
 \section{Conclusion}
 \label{sec:conclusion}
-We studied provenance-verifiable privacy cloaking for face images. Our experiments establish four findings: (i) adversarial cloaking severely damages neural watermark decoding (98\%$\rightarrow$6\% TPR@95\%); (ii) safety-region guidance and strength-calibrated embedding with BER-based detection jointly restore watermark detectability to 93--99\% at 0--0.8\% FPR while preserving cloaking retention; (iii) under strong cloaking, sequential embedding is competitive with joint optimization and outperforms the reverse embedding order; and (iv) a SOTA neural watermarking baseline (InvisMark) fails under JPEG on the same protocol, underscoring the role of BER-based detection. These results provide the first practical evidence that adversarial face cloaking can be made provenance-verifiable without sacrificing privacy protection, and they inform the sequential-vs-joint debate in adversarial watermarking.
+We studied provenance-verifiable privacy cloaking for face images. Our experiments establish four findings: (i) the deployment bottleneck of watermarking cloaked faces is JPEG recompression, to which cloaked faces are measurably more fragile (TPR@95\% 99.4\%$\rightarrow$6.0\% under JPEG75; 85.2\% vs.\ 88.3\% bit accuracy vs.\ clean), while cloaking alone is harmless at the pixel level; (ii) safety-region guidance and strength-calibrated embedding with BER-based detection jointly restore watermark detectability to 93--100\% at 0--0.6\% FPR while preserving cloaking retention; (iii) under strong cloaking, sequential embedding is competitive with joint optimization and outperforms the reverse embedding order; and (iv) a SOTA neural watermarking baseline (InvisMark) fails under JPEG on the same protocol, underscoring the role of BER-based detection. These results provide the first practical evidence that adversarial face cloaking can be made provenance-verifiable without sacrificing privacy protection, and they inform the sequential-vs-joint debate in adversarial watermarking.
 
 \section*{Acknowledgments}
 TBD.

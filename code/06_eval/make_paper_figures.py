@@ -16,10 +16,10 @@ OUT = os.path.join(ROOT, "paper", "figures")
 # 配色（色盲友好）
 C_A, C_B, C_C, C_D = "#4C72B0", "#DD8452", "#55A868", "#C44E52"
 
-# ---------- Fig 4a: clean vs cloaked 位精度分布（冲突） ----------
-# 数据：干净 100 张 vs 遮蔽 1000 张
-clean = json.load(open("/tmp/clean100_dec.json"))
-cloak = json.load(open("/tmp/soft_B_q-1.json"))  # B 组 sw2 在遮蔽图上
+# ---------- Fig 4a: 位精度分布（部署瓶颈: 协议匹配的 JPEG75） ----------
+# 数据：干净 100 张 vs 遮蔽 1000 张，均在 JPEG75 下（匹配协议）
+clean = json.load(open("/tmp/clean100_j75.json"))  # 干净 sw2, JPEG75
+cloak = json.load(open("/tmp/soft_B_q-1.json"))   # B 组 sw2 遮蔽图, JPEG75
 accs_clean = [r["bit_accuracy"] for r in clean["results"]]
 accs_cloak = [r["bit_accuracy"] for r in cloak["results"]]
 
@@ -33,7 +33,7 @@ ax.axvline(0.95, ls="--", color="gray", lw=1)
 ax.text(0.955, ax.get_ylim()[1]*0.95, "TPR@95%", fontsize=8)
 ax.set_xlabel("bit accuracy")
 ax.set_ylabel("density")
-ax.set_title("(a) Cloaking breaks watermark decoding")
+ax.set_title("(a) JPEG recompression breaks WAM decoding (JPEG75)")
 ax.legend(fontsize=8)
 
 # 4b: scaling_w 扫描（鲁棒性 vs 质量）
@@ -78,9 +78,9 @@ print("saved fig4_main_results.png")
 
 # ---------- Fig 5: JPEG 鲁棒性（BER TPR） ----------
 fig, ax = plt.subplots(figsize=(6, 4.5))
-jpeg = ["clean", "JPEG80", "JPEG50"]
-B_ber = [99.2, 99.6, 93.7]
-C_ber = [98.6, 99.0, 92.7]
+jpeg = ["true clean", "JPEG80", "JPEG50"]
+B_ber = [100.0, 99.6, 93.7]
+C_ber = [100.0, 99.0, 92.7]
 B_sw2 = [6.0, 16.2, 0.3]
 x = np.arange(3)
 ax.plot(x, B_ber, "o-", color=C_B, lw=2, label="B: global ($\\beta$=6)")
@@ -95,14 +95,14 @@ plt.tight_layout()
 plt.savefig(os.path.join(OUT, "fig5_jpeg_robustness.png"), dpi=300, bbox_inches="tight")
 print("saved fig5_jpeg_robustness.png")
 
-# ---------- Fig 6: BER 阈值敏感性曲线（θ TPR/FPR 权衡） ----------
+# ---------- Fig 6: BER 阈值敏感性曲线（θ TPR/FPR 权衡, JPEG75 部署条件, 协议匹配） ----------
 import json as _json
-data = _json.load(open(os.path.join(ROOT, "assets/experiments/new_results_20260817.json")))
-curves = data["ber_curve"]["curves"]
+data = _json.load(open(os.path.join(ROOT, "assets/experiments/honest_core_facts.json")))
+curves = data["ber_curve_j75"]["curves"]
 ths = [c["theta"] for c in curves]
-tpr_lowB = [c["tpr_low_B"]*100 for c in curves]
-tpr_lowC = [c["tpr_low_C"]*100 for c in curves]
-tpr_midB = [c["tpr_mid_B"]*100 for c in curves]
+tpr_lowB = [c["tpr_B"]*100 for c in curves]
+tpr_lowC = [c["tpr_C"]*100 for c in curves]
+tpr_midB = [c["tpr_midB"]*100 for c in curves]
 fpr_low = [c["fpr_low"]*100 for c in curves]
 fpr_mid = [c["fpr_mid"]*100 for c in curves]
 
@@ -118,7 +118,7 @@ ax.set_xlabel("detection threshold $\\theta$ (BER)")
 ax.set_ylabel("TPR / FPR (%)")
 ax.set_ylim(0, 105)
 ax.legend(fontsize=8, loc="lower right")
-ax.set_title("BER threshold sensitivity: TPR vs FPR")
+ax.set_title("BER threshold sensitivity under JPEG75 (TPR vs FPR)")
 plt.tight_layout()
 plt.savefig(os.path.join(OUT, "fig6_ber_curve.png"), dpi=300, bbox_inches="tight")
 print("saved fig6_ber_curve.png")

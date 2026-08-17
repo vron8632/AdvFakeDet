@@ -1,3 +1,5 @@
+> ⚠️ 本文为早期叙事稿（历史快照）。最新、已协议修正的版本以 `paper/main.tex` 为准（JPEG75 协议修正见 docs/PROTOCOL_CORRECTION_20260817.md）。
+
 # Provenance-Verifiable Privacy Cloaking for Face Images: Safety-Region-Guided Neural Watermarking with JPEG-Robust Decoding
 
 > 初稿 v0.1 | 2026-08-17 | 目标: JCR Q2 期刊 (Signal Processing: Image Communication / JVCIR / JISA)

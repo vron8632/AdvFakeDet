@@ -14,7 +14,7 @@
 - Outperforms the SOTA InvisMark baseline, which fails under JPEG on the same protocol.
 
 **缩短版（≤85 字符）：**
-- Cloaking destroys neural watermarks (98%→6% TPR@95%); first quantitative evidence.  (78)
+- JPEG recompression collapses WAM decoding on cloaked faces (6% TPR@95%).  (67)
 - Safety-region guidance restores cloaking retention (36.1%→42.1%) under strong watermarking.  (82)
 - Strength calibration + BER detection give 93–99% JPEG-robust decode at 0–0.8% FPR.  (79)
 - Sequential cloak→watermark keeps PSR 93.5%; reverse order drops it to 70–81.5%.  (78)
@@ -41,9 +41,11 @@ accountability. This paper makes adversarial face cloaking provenance-verifiable
 embedding a decodable neural watermark into cloaked faces while preserving FR evasion.
 
 Our contributions:
-1. We quantify, for the first time, the cloaking–watermark conflict: Fawkes cloaking
-   reduces WAM watermark decoding from 99.8% bit accuracy (98% TPR@95%) on clean faces
-   to 85.2% (6%) on cloaked faces.
+1. We isolate the deployment bottleneck of watermarking cloaked faces: at the pixel
+   level cloaking alone does not degrade WAM decoding (99.89% vs 99.84% bit accuracy),
+   but JPEG recompression—standard on sharing platforms—collapses decoding on cloaked
+   faces (6% TPR@95% under JPEG75; cloaked faces are measurably more fragile than clean
+   ones, 85.2% vs 88.3% bit accuracy).
 2. We propose safety-region guidance (SRG): FR-sensitivity maps steer watermark energy
    away from identity-critical regions, raising cloaking retention under strong
    watermarking from 36.1% to 42.1% with <1pp watermark loss.

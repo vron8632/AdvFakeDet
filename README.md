@@ -7,7 +7,7 @@ Safety-region-guided neural watermarking with JPEG-robust detection for adversar
 This repository implements **provenance-verifiable privacy cloaking**: embedding a decodable neural watermark (WAM) into Fawkes-cloaked face images so that face recognition evasion is preserved while the watermark remains detectable and JPEG-robust.
 
 Key scientific findings:
-- **The cloaking–watermark conflict**: Fawkes cloaking reduces WAM watermark decoding from 99.8% bit accuracy (98% TPR@95%) on clean faces to 85.2% (6%) on cloaked faces.
+- **The JPEG-fragility bottleneck**: cloaking alone doesn't degrade WAM at pixel level (99.89% vs 99.84% bit accuracy), but JPEG recompression — standard on sharing platforms — collapses decoding on cloaked faces (6% TPR@95% at JPEG75; 85.2% vs 88.3% vs clean), making JPEG robustness the deployment bottleneck.
 - **Safety-region guidance (SRG)**: FR-sensitivity maps guide watermark embedding away from FR-critical regions, restoring cloaking retention (36.1% → 42.1%) with <1pp watermark loss.
 - **Strength calibration + BER detection**: scaling_w=6 and BER≤0.25 detection reach 99.2%/99.6%/93.7% (clean/JPEG80/JPEG50) at 0.4–0.8% FPR (0% at θ≤0.15).
 - **Sequential ≈ joint, and order matters**: sequential embedding (cloak → SRG-guided WAM) is competitive with joint optimization (PSR 85% vs 85%) and preserves cloaking (93.5%) whereas watermark-then-cloak degrades it to 70–81.5%.
@@ -58,7 +58,7 @@ bash code/run_mid_experiment.sh          # mid cloaking + B/C watermark + PSR + 
 | B: +WAM global | 36.1% | 99.2% | 99.6% | 93.7% | 29.0/0.851/0.140 |
 | C: +WAM safety-region | **42.1%** | 98.6% | 99.0% | 92.7% | **30.1/0.879/0.111** |
 
-FPR = 0.4–0.8% at θ=0.25 (0% at θ≤0.15, 500 trials). Under mid cloaking: PSR 93.5% + watermark 95–100% coexist. See `docs/W4_supplementary_20260817.md` for SOTA baseline (InvisMark), α ablation, BER threshold curve, and embedding-order experiments.
+FPR = 0.2–0.6% at θ=0.25 under matched JPEG75 (0% at θ≤0.15, 500 trials). Under mid cloaking: PSR 93.5% + watermark 95–100% coexist. See `docs/W4_supplementary_20260817.md` (SOTA baseline, α ablation, BER curve, embedding order) and `docs/PROTOCOL_CORRECTION_20260817.md` (JPEG75 protocol fix).
 
 ## Related Work
 

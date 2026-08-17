@@ -80,3 +80,10 @@
 - teaser/框架图仍为占位（用户 gpt-image-2 生成）
 - 作者信息 TBD
 - 投稿材料（cover letter / highlights / author contributions）下一步
+
+## 9. ⚠️ 重大协议修正（同日发现，见 PROTOCOL_CORRECTION_20260817.md）
+- `--jpeg_quality -1` 在 PIL 中等价于 JPEG75，导致论文原 "clean" 列（99.2/98.6 等）实际是 JPEG75
+- 核心动机表述修正：遮蔽本身不破坏解码（true-clean 99.84→99.89），瓶颈是 JPEG 重压缩，遮蔽图略更脆弱（JPEG75: 85.2 vs 88.3）
+- Table 1/2/3/4/5 的 clean 列已全部改为 true-clean 真值（100%）
+- BER 阈值曲线改为 JPEG75 部署条件、正负样本协议匹配
+- 数据: assets/experiments/honest_core_facts.json
