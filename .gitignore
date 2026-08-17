@@ -1,0 +1,39 @@
+# Large data / model weights (regenerate or download)
+assets/
+*.h5
+*.pth
+*.pt
+*.zip
+*.tar
+*.tgz
+
+# Experiments outputs (regenerate)
+assets/experiments/
+/tmp/
+*.log
+
+# LaTeX aux
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+paper/*.toc
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Student data (not ours)
+newpatch/
+res/
+demo/
+
+# Environment
+.conda/
+.env
+*.local
+
+# Git
+.git/

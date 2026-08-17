@@ -1,0 +1,757 @@
+                                            Asymmetric Invertible Threat: Learning Reversible
+                                                 Privacy Defense for Face Recognition
+
+
+                                                       Jiabei Zhang1       Ziyuan Yang2     Andrew Beng Jin Teoh3         Yi Zhang1
+                                                                1
+                                                                 School of Cyber Science and Engineering, Sichuan University
+                                                        2
+                                                            Lee Kong Chian School of Medicine, Nanyang Technological University
+arXiv:2605.01217v1 [cs.CV] 2 May 2026
+
+
+
+
+                                                             3
+                                                               School of Electrical and Electronic Engineering, Yonsei University
+
+                                                              2023141530097@stu.scu.edu.cn cziyuanyang@gmail.com
+                                                                    bjteoh@yonsei.ac.kr yzhang@scu.edu.cn
+
+
+
+                                                                                        Abstract
+
+                                                    Face Recognition systems are widely deployed in real-world applications, but they
+                                                    also raise privacy concerns due to unauthorized collection and misuse of facial data.
+                                                    Existing adversarial privacy protection methods rely on input-space perturbations
+                                                    to obfuscate identity information, yet their protection can degrade when adversaries
+                                                    learn restoration or purification mappings that partially invert the transformation.
+                                                    We study this setting as an asymmetric adversarial attack, in which reverse ma-
+                                                    nipulation becomes feasible because existing defense paradigms do not control
+                                                    reversibility. To address this problem, we propose Asymmetric Reversible Face
+                                                    Protection (ARFP), a restoration-aware extension of personalized face cloaking
+                                                    that integrates privacy protection, keyed recovery, and tamper indication in a single
+                                                    framework. ARFP consists of three components: Key-Conditioned Manifold Bind-
+                                                    ing, which ties the protection transformation to a user-provided key; Adversarial
+                                                    Restoration-Aware Training, which introduces a surrogate restoration adversary
+                                                    during training to improve robustness against evaluated inverse purification attacks;
+                                                    and Authorized Reversible Restoration, which supports recovery with the correct
+                                                    key while providing nonce-based tamper indication. Extensive experiments under
+                                                    the threat models considered in this work show that ARFP improves resistance
+                                                    to the evaluated restoration attacks while preserving authorized recovery utility.
+                                                    These results provide empirical evidence of key-sensitive recovery behavior and
+                                                    tamper awareness in the tested settings.
+
+
+                                        1    Introduction
+                                        The widespread deployment of Face Recognition (FR) systems [16, 3, 19, 12] has transformed digital
+                                        identity verification, supporting applications ranging from secure authentication to smart surveillance.
+                                        However, it also raises substantial privacy concerns. Facial images shared online can be scraped to
+                                        construct large-scale databases without user consent [17, 1], enabling misuse such as covert tracking,
+                                        identity theft, and behavioral profiling [18, 10].
+                                        To mitigate such risks, adversarial privacy protection has emerged as a practical defense direction [17,
+                                        1]. Methods such asFawkes [17], LowKey [1], and Chameleon [2] perturb the input image to
+                                        suppress unauthorized FR while preserving visual utility. Chameleon [2], in particular, introduces
+                                        personalized privacy masks to improve efficiency and transferability. Despite these advances, existing
+                                        methods primarily operate as input-space cloaks and do not explicitly control whether the applied
+                                        transformation can later be approximated, neutralized, or partially reversed [6, 8, 21].
+
+                                        Preprint.
+Despite their practical effectiveness, these approaches rely on a one-sided protection assumption:
+once a perturbation or privacy mask is applied, the resulting image is implicitly treated as protected.
+This overlooks a fundamental asymmetry between intended access control and the model’s actual
+capabilities. The forward transformation is meant to restrict identity inference, but no corresponding
+mechanism constrains reverse manipulation. Consequently, once restoration becomes feasible, it is
+not reserved for authorized users and may also be exploited by an adversary.
+We study this vulnerability as an asymmetric ad-
+versarial attack, in which an adversary learns or
+approximates an inverse mapping to reconstruct or
+weaken a privacy-preserving transformation with-
+out privileged access. Figure 1 shows this setting.
+The vulnerability arises because existing cloaking
+methods remain in the same model space used for
+training and evaluation. If the protection transfor-
+mation can be approximated there, reverse manip-
+ulation can also be learned. The practical question
+is not only whether a cloak disrupts recognition,
+but whether reversal is restricted to authorized par- Figure 1: Illustration of the asymmetric adver-
+ties.                                                 sarial attack.
+Face privacy protection is therefore an asymmetric, bidirectional problem: a forward mapping
+generates a protected image for public release, whereas the reverse mapping should be available only
+under authorized conditions. This motivates key-conditioned protection and direct robustness training
+against restoration attacks.
+To address this problem, we propose Asymmetric Reversible Face Protection (ARFP), which is best
+viewed as a restoration-aware extension of personalized face cloaking. ARFP integrates three modules:
+Key-Conditioned Manifold Binding (KMB), Adversarial Restoration-Aware Training (ARAT), and
+Authorized Reversible Restoration (ARR). KMB embeds a user-specific secret key into the mask
+generation process via affine modulation, producing a key-dependent transformation manifold. ARAT
+introduces a surrogate restoration network during training and optimizes the protector against this
+explicit inverse adversary. ARR supports key-guided recovery for authorized users while extracting a
+nonce as a fragile tamper-indication signal. Among these components, the central contribution is the
+restoration-aware training loop, which improves robustness to restoration attempts within the same
+protection pipeline. ARFP is model-agnostic and can be integrated with existing FR systems without
+retraining the recognizer.
+The main contributions of this work are summarized as follows:
+
+       • We study restoration-based attacks against adversarial face cloaking in the asymmetric
+         adversarial attack setting, showing that exposure of reversibility can weaken existing input-
+         space protections.
+       • We present ARFP as a restoration-aware extension of personalized face cloaking. Its central
+         technical contribution is surrogate-restorer training, which improves robustness to restoration
+         attempts within a key-conditioned protection pipeline.
+       • We integrate key-conditioned protection, authorized recovery, and nonce-based fragile-
+         tamper indication into a single framework.
+
+
+2   Related Work
+
+Deep learning has substantially advanced FR performance [16, 3]. However, FR systems remain
+vulnerable to adversarial manipulation [18, 10]. Early digital cloaking methods, such as Fawkes [17],
+generate identity-shifting perturbations but require costly optimization and exhibit limited robustness
+to common image transformations. LowKey [1] improves black-box transferability through ensemble-
+based attacks, but still incurs substantial computation and may introduce visible artifacts. Physical-
+world methods, including Adv-Makeup [21] and AdvHat [11], target patch-based attacks and are less
+suited to protecting digital images. Chameleon [2] further improves efficiency and transferability by
+generating personalized privacy masks with a conditional generative model.
+
+
+                                                   2
+Within this line of work, ARFP is more appropriately viewed as a restoration-aware extension of
+personalized face cloaking in the digital setting, rather than as a general solution to recoverable or
+verifiable privacy protection. The central distinction is the incorporation of a surrogate restoration
+adversary during training so that the learned protection remains more robust to the evaluated inverse
+or purification attacks, while still supporting keyed recovery and tamper indication.
+
+
+3     Security Analysis and Empirical Insights
+
+3.1   Threat Model
+
+Adversary. In our threat model, the adversary can access protected facial images as well as publicly
+available face images from the web, but has no access to the user’s secret key or the internal parameters
+of the protection mechanism. The adversary does not require knowledge of, or access to, the used FR
+model. Under such a setting, the adversary can readily collect large-scale facial data and perform
+identity inference without additional system-specific information.
+Defender. The defender operates without any special privileges over the FR system and does not
+modify or access its internal parameters. Under this setting, we identify the following defense goals:
+1. Rejection of Unauthorized Inputs. Unauthorized face images should be rejected by the protected
+FR systems to reduce identity leakage from raw inputs.
+2. Visual Fidelity Preservation. The protection process should preserve visual quality and usability
+for legitimate images sharing.
+3. Identity Obfuscation. Protected images should suppress identity information cues against
+adversarial FR models while maintaining the intended asymmetric protection setting.
+4. Authorized Recovery. The mechanism should support the recovery of identity-consistent images
+under the correct credential.
+Existing methods mainly address the first two objectives. By contrast, our formulation is designed to
+address all four within a unified framework, with particular emphasis on the risk posed by inversion-
+oriented attacks under asymmetric access conditions.
+
+
+3.2   Empirical Motivation
+
+We conduct preliminary experiments to moti-
+vate our study by comparing representative prior
+work, Chameleon [2],with ARFP under inversion-
+oriented transformations. We use several domain-
+translation models to simulate restoration or in-
+version attempts. As shown in Figure 2(a),
+Chameleon effectively rejects conventional recog-
+nition when such transformations are absent. How-
+ever, under domain-transferred inputs, its protec-
+tion degrades substantially for most evaluated in-
+version methods. In particular, unsupervised trans- Figure 2: Feature Similarity under attacks
+formation models such as CycleGAN [25] and (Lower is better). (a) Baseline fails against at-
+DiffPure [14] reduce the protection effect, while tacks. (b) ARFP maintains robust protection.
+the supervised domain-transfer method Adaptive Reversal causes more pronounced degradation.
+These results suggest that, for the transformation families evaluated here, static obfuscation may not
+remain stable under distribution-altering but label-consistent mappings.
+In contrast, Figure 2 (b) shows that ARFP maintains lower identity similarity under the same evaluated
+transformations. Its key-conditioned design appears more resistant to these inversion-oriented attacks
+in our empirical setting while preserving the asymmetric access structure intended by the framework.
+These preliminary results motivate the need for an asymmetric defense paradigm, though they should
+be interpreted within the scope of the evaluated attack models.
+
+
+                                                   3
+Figure 3: Overview of the proposed Asymmetric Reversible Face Protection (ARFP) framework.
+Our framework comprises three components: (b) KMB for key-conditioned feature modulation, (c)
+ARAT for robustness against restoration attacks, and (d) ARR for authorized reversible recovery.
+4     Method
+4.1   Overview of the ARFP Framework
+
+To preserve privacy and against inversion-oriented attacks, we propose the Asymmetric Reversible
+Face Protection (ARFP) framework, as shown in Figure 3. ARFP formulates face protection as a
+key-conditioned generative process with three coupled components. Key-Conditioned Manifold
+Binding (KMB) injects a user-specific key into the protection mapping so the generated perturbation
+depends on both image content and credential. Adversarial Restoration-Aware Training (ARAT)
+introduces a surrogate restoration adversary during optimization to improve resistance to inversion
+attempts. Authorized Reversible Restoration (ARR) enables credential-conditioned recovery and
+provides an auxiliary tamper signal based on a nonce. Together, these components define a protection
+pipeline with keyed conditioning, restoration-aware training, and recovery support under asymmetric
+access conditions.
+
+4.2   Key-Conditioned Manifold Binding
+
+To condition protection on user credentials, we introduce the KMB module. The conditional mask
+generator G is based on ResNet and receives an input image x, a secret key k, and a stochastic nonce
+m. Rather than using a fixed perturbation pattern, KMB modulates intermediate generator features
+with a condition embedding derived from (k, m), so that the resulting protection depends jointly on
+image content and the provided credential.
+Let x ∈ R3×H×W be the original image, and let fi ∈ RCi ×Hi ×Wi denote the feature map at the i-th
+layer of the generator. We introduce a condition encoder E implemented as a multi-layer perceptron,
+which maps the key–nonce pair (k, m) to a latent embedding e = E(k, m). KMB then recalibrates
+channel responses through learned affine modulation:
+                       KMB(fi , k, m) = γi (E(k, m)) ⊙ fi + βi (E(k, m)),                        (1)
+                                       Ci
+where γi (E(k, m)), βi (E(k, m)) ∈ R denote channel-wise scale and shift parameters that are
+broadcast over the spatial dimensions. The final protective perturbation ∆(x, k, m) is produced by
+aggregating these modulated features across the generator, and the protected image is defined as:
+
+                              z = G(x, k, m) = x + α · ∆(x, k, m),                               (2)
+where α controls the perturbation magnitude.
+
+
+                                                 4
+Under this construction, ∆ is not a fixed additive mask but an input- and key-dependent transformation
+induced by the modulated generator features. In this sense, KMB makes protection mapping
+conditional on the supplied credential, consistent with the empirical key-sensitivity analysis presented
+later, rather than implying a general guarantee of irreversibility.
+
+4.3   Adversarial Restoration-Aware Training
+
+Standard adversarial training typically optimizes against a classifier. By contrast, ARAT formulates
+face privacy protection as a minimax optimization problem against an explicit inversion adversary.
+We write the objective as:
+                          h                                                               i
+         min max Ex,k,m ∥x − R(G(x, k, m), k, m)∥1 − λrev LREV (x, A(G(x, k, m))) ,              (3)
+         G,R   A
+
+where A denotes a surrogate restoration adversary network [4], and R is the authorized recovery
+module. For convenience, we denote the authorized reconstruction term by:
+                                       Lrec (x, x̂) = ∥x − x̂∥1 ,                                    (4)
+with x̂ = R(G(x, k, m), k, m). The adversarial restoration loss is defined as:
+                              LREV (x, x̃) = ∥x − x̃∥1 + λl2 ∥x − x̃∥22 ,                            (5)
+where x̃ = A(G(x, k, m)) and λl2 controls the relative contribution of the ℓ2 term. The coefficient
+λrev balances recovery fidelity and restoration resistance.
+Under this formulation, A is optimized to minimize LREV and thereby approximate an inverse
+mapping from protected images z to clean images x. In contrast, G and R are optimized so that
+authorized recovery remains feasible while the adversary’s restoration becomes more difficult. In
+each training cycle, we alternate these updates: the surrogate adversary minimizes LREV with the
+protector fixed, and the protector-side modules are then updated with the adversary fixed. This makes
+the optimization schedule explicit and removes ambiguity in the compact minimax notation.
+The role of ARAT is therefore restoration-aware rather than purely classifier-aware. Its objective is to
+train the protection mapping against the specific restoration pressure induced by A, while preserving
+recoverability under the provided key.
+
+4.4   Authorized Reversible Restoration
+
+We next introduce the ARR module, which provides credential-conditioned recovery together with
+a lightweight tamper-indication signal. A nonce m is embedded during generation as an auxiliary
+conditioning variable. A lightweight decoder D is trained to recover this nonce from the protected
+image z:
+                                    LM SE = ∥D(z) − m∥22 .                                     (6)
+
+At inference time, the same decoder can be applied to z and, when needed, to the recovered image x̂
+to check whether the embedded signal remains consistent with the original nonce.
+Consistency between the extracted nonce m̂ and the original m serves as a practical indicator of
+significant modification. This branch is intended as fragile tamper indication or provenance awareness,
+not as cryptographic proof of ownership.
+The total training objective is:
+                    LT otal = λrec Lrec + λid Lid + λM SE LM SE − λrev LREV ,                        (7)
+where Lid is the identity loss, implemented by maximizing cosine distance in FR feature space to
+suppress identity matching. The hyperparameters λrec , λid , and λM SE control the relative weights
+of recovery fidelity, identity obfuscation, and nonce consistency, respectively. The term −λrev LREV
+couples the protector to the surrogate adversary by penalizing solutions that are easy to restore.
+In practice, once A is updated to reduce LREV , the protector-side modules are updated to minimize
+LT otal with A fixed. This alternating procedure clarifies how ARR interacts with ARAT during
+optimization.
+
+
+                                                   5
+4.5   Information-Theoretic Interpretation
+
+This section provides a supportive information-theoretic interpretation of feature leakage under the
+proposed key-conditioned transformation. Its purpose is to formalize one aspect of the protection
+mechanism at the level of identity-feature estimation, rather than to provide a formal cryptographic
+security guarantee. Specifically, let G : X × K → Z denote the protection mapping, where x ∈ X is
+an input face image and k ∈ K is a secret key sampled independently from a high-entropy key space.
+The protected output is z = G(x, k). Let ϕ : X → Rd be a fixed face-recognition model, and let
+h = ϕ(x) denote the corresponding identity embedding.
+Proposition 1 (Feature-leakage interpretation under protected observation). Consider an adversary
+that estimates the identity embedding h using only the protected observation z under squared
+error. Then the optimal estimator is given by the conditional expectation of h given z, and the
+corresponding minimum estimation error is governed by the conditional uncertainty of h after
+observing z. Consequently, when the mutual information between h and z is reduced, the remaining
+uncertainty about h given z increases, which is consistent with greater difficulty in recovering
+identity-related features from the protected output.
+Proposition 1 should be interpreted as a qualitative
+information-theoretic statement rather than as a
+closed-form security bound. Its role is to support
+the design intuition behind key-conditioned pro-
+tection: if the transformation suppresses the infor-
+mation about h that remains observable through z,
+then recovering identity-related features from the
+protected output becomes harder on average. This
+links the empirical objective of reducing feature
+leakage to a mathematically interpretable quantity,
+but it does not by itself imply a general guarantee Figure 4: Visualization of rescaled protection
+of inversion resistance, irreversibility, or crypto- masks. ARFP concentrates identity-specific per-
+graphic security. A short supporting derivation is turbations on critical semantic regions.
+provided in Appendix A.
+
+5     Experiments
+5.1   Experimental Setup
+
+Datasets. We evaluate our framework on two benchmark datasets widely used in face privacy research:
+LFW [7] and FaceScrub [13].Detailed preprocessing operations are provided in Appendix B.
+Face Recognition Models. To evaluate robustness and transferability, we use a diverse collection of
+publicly available pretrained FR models, including five architectures trained on four public datasets.
+Details are provided in Appendix B.
+Baselines. We compare ARFP against representative face-cloaking baselines under the relevant
+evaluation settings. For the unseen-model LFW comparison in Fig. 5, we report methods with
+directly comparable results under that protocol: Chameleon [2], OPOM [24], and TIP-IM [20].
+For restoration-attack and image-quality evaluations, we additionally compare with Fawkes (High
+mode) [17] and Chameleon [2]. All baselines are run using their official implementations and
+recommended configurations.
+Implementation Details. Comprehensive net-
+work and training hyperparameters are provided
+in Appendix B.
+Evaluation Metric. Following prior work [2], we
+adopt the Protection Success Rate (PSR) to evalu- Figure 5: Protection effectiveness on LFW
+ate performance against unauthorized FR. PSR is against unseen FR models.
+defined as the complement of FR accuracy on the
+protected dataset:
+                                  PSR = 100% − FR Accuracy.                                (8)
+A higher PSR indicates more effective prevention of matching to the ground-truth identity.
+
+
+                                                  6
+            Table 1: Protection Success Rate (PSR %) of ARFP across eight black-box models.
+ Identity                                              PSR (%)                                      Statistics
+               EN-MC     RN50-GL   RN50-MC   RN50-VF     RN50-WF    RN18-MC   RN34-MC   RN100-MC   Mean    Std
+ A. Felix       100.00    100.00    93.33     86.67        100.00    93.33     86.67     100.00    95.00   5.27
+ B. Gordon      100.00    100.00     91.67    100.00       100.00    91.67     100.00     91.67    96.88   4.14
+ C. Myers       100.00    100.00    81.82     100.00       100.00    90.91     81.82     100.00    94.32   7.91
+ D. Osorno      100.00     92.31    100.00     92.31       100.00    92.31      84.62    100.00    95.19   5.56
+ G. Ferreia     100.00    100.00    100.00     92.86       100.00    92.86     92.86     100.00    97.32   3.57
+ I. Perlman     100.00    100.00     80.00    100.00       100.00    90.00      80.00    100.00    93.75   8.84
+ M. Georges     100.00    100.00    93.33     100.00       100.00    93.33     86.67     100.00    96.67   4.71
+ O. Neuville     91.67    100.00    100.00    100.00        91.67    100.00     91.67    100.00    96.88   4.14
+ R. Corrie      100.00    100.00    93.75     100.00       100.00    93.75     93.75     100.00    97.66   3.12
+ V. Zhao        100.00    100.00    90.91     100.00       100.00    90.91     81.82     100.00    95.45   6.57
+ Mean           99.17     99.23     92.48     97.18        99.17     92.91     87.99      99.17    95.91   4.22
+
+
+5.2   Protection Performance
+
+To qualitatively assess the generated protection mechanisms, we visualize the learned masks and
+the protected images they produce. Unlike fixed or identity-agnostic masks, our approach produces
+adaptive perturbations for different faces, enabling more personalized protection.
+Figure 4 illustrates the learned masks for selected identities. The masks exhibit distinct identity-
+dependent structures driven by the KMB module, suggesting that the protection adapts to subject-
+specific facial content.
+                                                         To evaluate protection effectiveness and generaliza-
+                                                         tion across unseen evaluators, we compare ARFP
+                                                         with Chameleon [2], OPOM [24], and TIP-IM [20].
+                                                         As shown in Fig. 5, ARFP achieves high unseen-
+                                                         model protection, with average PSR above 90%, and
+                                                         remains competitive with or better than the reported
+                                                         baselines across standard architectures.
+                                                  Table 1 provides a finer-grained evaluation by re-
+                                                  porting PSR for ten randomly selected identities
+                                                  against eight black-box FR models. These eval-
+                                                  uators vary in architecture and pretraining source.
+                                                 ARFP achieves a mean PSR of 95.91%, with moder-
+                                                  ate variance across identities, indicating consistent
+                                                  protection performance across the tested models and
+Figure 6: Cross-model retrieval on FaceScrub subjects.
+after protection.
+To qualitatively illustrate black-box transferabil-
+ity, we visualize retrieval results for unautho-
+rized queries. As shown in Fig. 6, after applying
+ARFP, the retrieved identities are no longer the Figure 7: Protection efficiency analysis. ARFP
+true matches.                                        uses a single forward pass, whereas optimization-
+                                                     based baselines incur a higher generation cost.
+We also evaluate computational cost, as shown in
+Fig. 7. Optimization-based approaches incur substantial overhead during protection generation. In
+contrast, ARFP requires only a single forward pass, achieving near real-time performance (≈ 0.05s)
+with low CPU and memory overhead, which is favorable for practical deployment.
+
+5.3   Image Quality and Consistency
+
+Preserving visual quality is an important objective
+for practical deployment. ARFP is designed to
+learn a transformation that maintains perceptual
+consistency while suppressing identity informa-
+tion. As illustrated in Fig. 8, the generated images
+retain natural appearance and exhibit stable visual
+characteristics across variations in pose and light-
+ing.
+                                                              Figure 8: Visual consistency of ARFP across
+                                                              pose and lighting variations.
+                                                          7
+                          Table 2: Quantitative image quality comparison.
+
+                              Method           PSNR (dB) ↑      SSIM ↑
+                              Fawkes [17]             22.4        0.81
+                              Chameleon [2]           28.5        0.89
+                              ARFP (Ours)             31.2        0.94
+
+
+Table 2 shows that ARFP also pre- Table 3: Full-scale restoration attack evaluation on the LFW
+serves image fidelity well, with a test set. Mean PSR (%) ± variance.
+PSNR of 31.2 dB and an SSIM of 0.94.    Method         DiffPure     CycleGAN       BINN
+We next evaluate its robustness against Fawkes        23.1 ± 5.1 18.4 ± 4.2 10.1 ± 3.2
+restoration-oriented inversion attacks. Chameleon     70.0 ± 8.0 32.0 ± 12.0 22.0 ± 8.0
+                                              ARFP (Ours) 93.4 ± 1.8      86.5 ± 2.5   91.2 ± 2.1
+5.3.1    Robustness Experiment
+
+We consider three restoration baselines: DiffPure [14], CycleGAN [25], and BINN [9]. Table 3
+summarizes the performance under these attacks. ARFP maintains a mean PSR of 91.2% under
+BINN, the strongest paired attack in this evaluation. For the evaluated restoration families, these
+results indicate that the key-conditioned transformation makes recovery of identity-consistent clean
+images more difficult than for the compared baselines. Visualizations of adversarially attacked images
+are provided in the Appendix C.
+
+5.4     Ablation Study
+
+Table 4: Ablation of ARFP components. We report PSR before and after the        To evaluate the con-
+Adaptive Reversal attack, together with SSIM.                                   tribution of each
+                                                                                module, we con-
+ ARAT KMB ARR Clean PSR (%) Attacked PSR (%) SSIM                               duct the ablation
+    ×         ✓      ✓            93.8                  24.5            0.98    study reported in
+    ✓         ×      ✓            94.1                  41.2            0.85    Table   4.    Here,
+    ✓         ✓       ×           96.5                  88.4            0.94    Clean PSR denotes
+    ✓         ✓      ✓            95.9                  91.2            0.94    the defense success
+                                                                                rate measured di-
+                                                                                rectly on the pro-
+tected images. Attacked PSR denotes the protection success rate after the protected images are
+subjected to a BINN attack designed to remove the privacy perturbations. These two metrics quantify
+robustness under standard and adaptive evaluation settings.
+The Effect of ARAT. Removing the surrogate restoration adversary leads to a large drop under
+adaptive reversal. While the model still achieves high Clean PSR (93.8%), Attacked PSR drops
+to 24.5%. This shows that restoration-aware training is important for robustness to the evaluated
+inversion attack.
+The Effect of KMB. Without key conditioning, the model becomes a deterministic transformation
+that is easier to approximate from paired data. As shown in Table 4, removing the key reduces
+Attacked PSR to 41.2% and lowers reconstruction quality to SSIM 0.85, indicating that key-dependent
+modulation contributes substantially to restoration resistance.
+The Effect of ARR. Removing the nonce branch slightly improves Clean PSR (96.5%) but reduces
+Attacked PSR under purification (88.4% versus 91.2%). This suggests that the auxiliary nonce
+regularization stabilizes the learned transformation and modestly improves robustness in the evaluated
+setting.
+
+5.5     Access Control
+
+Key Sensitivity. As shown in Table 5, correct-key access enables faithful recovery with high structural
+consistency (SSIM 0.94), whereas incorrect-key access leads to severe reconstruction failure (SSIM
+< 0.4). Meanwhile, the nonce branch rejects wrong-key outputs with a Bit Error Rate (BER) close to
+that of random guessing. These results show strong empirical key sensitivity for authorized recovery
+
+
+                                                  8
+Table 5: Access control and key sensitivity analysis, assessing the separation between correct-key
+and wrong-key recovery.
+
+          Access Condition        Key Error (HD)        PSNR ↑      SSIM ↑      Nonce BER ↓
+          Authorized (ktrue )            0 bits           31.2        0.94           1.2%
+          Minor Mistake                 1 bit             14.3        0.38          48.9%
+          Moderate Mistake             16 bits            12.8        0.33          50.1%
+          Random Guess                ≈ 128 bits          12.1        0.31          50.4%
+
+
+
+under the evaluated conditions. In addition, ARFP supports nonce-based integrity-aware recovery as
+a lightweight tamper-indication mechanism during restoration.
+We further evaluate the robustness of integrity-aware re-
+covery under benign and malicious conditions. Benign
+settings include raw and JPEG-compressed images. Ma- Table 6: BER under different conditions.
+licious scenarios include local tampering through splicing    Condition     BER (%)
+[5], as well as two restoration-oriented attacks: BINN [9]    Raw             1.2%
+and DiffPure [14]. As shown in Table 6, BER remains low       JPEG            4.5%
+under benign conditions and rises sharply under tampered
+or adversarially transformed inputs. In the evaluated set-    Splicing [5]   48.3%
+ting, this behavior supports the nonce branch as a practical  BINN [9]       49.1%
+indicator of tampering or restoration failure, rather than as DiffPure [14]  50.2%
+a general verification mechanism.
+
+
+5.6   Hyperparameter Selection
+
+                                                   We further analyze the sensitivity of ARFP to the
+                                                   perturbation magnitude factor α, which controls the
+                                                   trade-off between protection strength and visual qual-
+                                                   ity. As illustrated in Figure 9, varying α from 0.01
+                                                   to 0.15 reveals three regimes. For small perturba-
+                                                   tions (α < 0.03), visual quality remains high (PSNR
+                                                   > 35 dB), but protection against strong FR models is
+                                                   insufficient. Around α = 0.05, the curve exhibits a
+                                                   knee point: further increases produce smaller gains in
+                                                   protection while degrading perceptual quality more
+                                                   noticeably. We therefore select α = 0.05 as the oper-
+                                                   ating point used in the main experiments. For larger
+         Figure 9: The impact of α.                perturbations (α > 0.08), protection continues to in-
+                                                   crease, but visible artifacts become more pronounced
+                                                   and PSNR declines.
+
+
+
+6     Conclusion
+
+In this paper, we identify the lack of controllable reversibility in existing face privacy protection meth-
+ods, which exposes them to asymmetric adversarial attacks. To address this, we introduce an attack
+paradigm and propose the ARFP framework, formulating face privacy as an asymmetric bidirectional
+problem. ARFP integrates key-conditioned generation, adversarial training against inversion, and
+authorized recovery, enabling robust protection against adaptive attacks while preserving reliable
+recovery. In addition, a nonce-based mechanism provides a lightweight signal for tamper awareness.
+Extensive experiments demonstrate that ARFP achieves strong robustness, high visual fidelity, and
+efficient deployment. Future work includes extending the framework to broader modalities and
+exploring stronger theoretical guarantees for controllable reversibility.
+
+
+                                                    9
+References
+ [1] Valeriia Cherepanova, Micah Goldblum, Harrison Foley, Shiyuan Duan, John P. Dickerson,
+     Gavin Taylor, and Tom Goldstein. Lowkey: Leveraging adversarial attacks to protect social
+     media users from facial recognition. In 9th International Conference on Learning Represen-
+     tations, ICLR 2021, Virtual Event, Austria, May 3-7, 2021. OpenReview.net, 2021. URL
+     https://openreview.net/forum?id=hJmtwocEqzc.
+ [2] Ka-Ho Chow, Sihao Hu, Tiansheng Huang, and Ling Liu. Personalized privacy protection mask
+     against unauthorized facial recognition. In Computer Vision - ECCV 2024 - 18th European
+     Conference, Milan, Italy, September 29-October 4, 2024, Proceedings, Part LXXXII, volume
+     15140 of Lecture Notes in Computer Science, pages 434–450. Springer, 2025. ISBN 978-3-031-
+     73006-1. URL https://doi.org/10.1007/978-3-031-73007-8_24.
+ [3] Jiankang Deng, Jia Guo, Niannan Xue, and Stefanos Zafeiriou. Arcface: Additive angular
+     margin loss for deep face recognition. In IEEE Conference on Computer Vision and Pattern
+     Recognition, CVPR 2019, Long Beach, CA, USA, June 16-20, 2019, pages 4690–4699.
+     Computer Vision Foundation / IEEE, 2019. doi: 10.1109/CVPR.2019.00482. URL http:
+     //openaccess.thecvf.com/content_CVPR_2019/html/Deng_ArcFace_Additive_
+     Angular_Margin_Loss_for_Deep_Face_Recognition_CVPR_2019_paper.html.
+ [4] Laurent Dinh, David Krueger, and Yoshua Bengio. NICE: non-linear independent components
+     estimation. 2015. URL http://arxiv.org/abs/1410.8516.
+ [5] Jing Dong, Wei Wang, and Tieniu Tan. Casia image tampering detection evaluation database. In
+     2013 IEEE China Summit and International Conference on Signal and Information Processing,
+     pages 422–426, 2013. doi: 10.1109/ChinaSIP.2013.6625374.
+ [6] Ian J. Goodfellow, Jonathon Shlens, and Christian Szegedy. Explaining and harnessing adver-
+     sarial examples. In Yoshua Bengio and Yann LeCun, editors, 3rd International Conference on
+     Learning Representations, ICLR 2015, San Diego, CA, USA, May 7-9, 2015, Conference Track
+     Proceedings, 2015. URL http://arxiv.org/abs/1412.6572.
+ [7] Gary B. Huang, Marwan Mattar, Tamara Berg, and Eric Learned-Miller. Labeled Faces
+     in the Wild: A Database forStudying Face Recognition in Unconstrained Environments.
+     Technical report, Marseille, France, October 2008. URL https://inria.hal.science/
+     inria-00321923.
+ [8] Hanxun Huang, Xingjun Ma, Sarah Monazam Erfani, James Bailey, and Yisen Wang. Unlearn-
+     able examples: Making personal data unexploitable. In International Conference on Learning
+     Representations, 2021. URL https://openreview.net/forum?id=iAmZUo0DxC0.
+ [9] Jörn-Henrik Jacobsen, Arnold W. M. Smeulders, and Edouard Oyallon. i-revnet: Deep invertible
+     networks. In 6th International Conference on Learning Representations, ICLR 2018, Vancouver,
+     BC, Canada, April 30 - May 3, 2018, Conference Track Proceedings. OpenReview.net, 2018.
+     URL https://openreview.net/forum?id=HJsjkMb0Z.
+[10] Seong Joon Oh, Mario Fritz, and Bernt Schiele. Adversarial image perturbation for privacy
+     protection – a game theory perspective. In Proceedings of the IEEE International Conference
+     on Computer Vision (ICCV), Oct 2017.
+[11] Stepan Komkov and Aleksandr Petiushko. Advhat: Real-world adversarial attack on arcface face
+     ID system. In 25th International Conference on Pattern Recognition, ICPR 2020, Virtual Event
+     / Milan, Italy, January 10-15, 2021, pages 819–826. IEEE, 2020. doi: 10.1109/ICPR48806.
+     2021.9412236. URL https://doi.org/10.1109/ICPR48806.2021.9412236.
+[12] Qiang Meng, Shichao Zhao, Zhida Huang, and Feng Zhou. Magface: A universal representation
+     for face recognition and quality assessment. In IEEE Conference on Computer Vision
+     and Pattern Recognition, CVPR 2021, virtual, June 19-25, 2021, pages 14225–14234.
+     Computer Vision Foundation / IEEE, 2021.        doi: 10.1109/CVPR46437.2021.01400.
+     URL https://openaccess.thecvf.com/content/CVPR2021/html/Meng_MagFace_
+     A_Universal_Representation_for_Face_Recognition_and_Quality_Assessment_
+     CVPR_2021_paper.html.
+
+
+                                               10
+[13] Hong-Wei Ng and Stefan Winkler. A data-driven approach to cleaning large face datasets. In
+     2014 IEEE International Conference on Image Processing (ICIP), pages 343–347, 2014. doi:
+     10.1109/ICIP.2014.7025068.
+[14] Weili Nie, Brandon Guo, Yujia Huang, Chaowei Xiao, Arash Vahdat, and Anima Anandkumar.
+     Diffusion models for adversarial purification. In International Conference on Machine Learning,
+     2022. URL https://api.semanticscholar.org/CorpusID:248811081.
+[15] Olivier Rioul. A simple proof of the entropy-power inequality via properties of mutual infor-
+     mation. pages 46–50, 2007. doi: 10.1109/ISIT.2007.4557202. URL https://doi.org/10.
+     1109/ISIT.2007.4557202.
+[16] Florian Schroff, Dmitry Kalenichenko, and James Philbin. Facenet: A unified embedding for
+     face recognition and clustering. In Proceedings of the IEEE Conference on Computer Vision
+     and Pattern Recognition (CVPR), June 2015.
+[17] Shawn Shan, Emily Wenger, Jiayun Zhang, Huiying Li, Haitao Zheng, and Ben Y. Zhao.
+     Fawkes: Protecting privacy against unauthorized deep learning models. In Srdjan Capkun and
+     Franziska Roesner, editors, 29th USENIX Security Symposium, USENIX Security 2020, August
+     12-14, 2020, pages 1589–1604. USENIX Association, 2020. URL https://www.usenix.
+     org/conference/usenixsecurity20/presentation/shan.
+[18] Mahmood Sharif, Sruti Bhagavatula, Lujo Bauer, and Michael K. Reiter. Accessorize to a
+     crime: Real and stealthy attacks on state-of-the-art face recognition. In Edgar R. Weippl, Stefan
+     Katzenbeisser, Christopher Kruegel, Andrew C. Myers, and Shai Halevi, editors, Proceedings
+     of the 2016 ACM SIGSAC Conference on Computer and Communications Security, Vienna,
+     Austria, October 24-28, 2016, pages 1528–1540. ACM, 2016.
+[19] Hao Wang, Yitong Wang, Zheng Zhou, Xing Ji, Dihong Gong, Jingchao Zhou, Zhifeng Li,
+     and Wei Liu. Cosface: Large margin cosine loss for deep face recognition. In 2018 IEEE
+     Conference on Computer Vision and Pattern Recognition, CVPR 2018, Salt Lake City, UT, USA,
+     June 18-22, 2018, pages 5265–5274. Computer Vision Foundation / IEEE Computer Society,
+     2018. doi: 10.1109/CVPR.2018.00552. URL http://openaccess.thecvf.com/content_
+     cvpr_2018/html/Wang_CosFace_Large_Margin_CVPR_2018_paper.html.
+[20] Xiao Yang, Yinpeng Dong, Tianyu Pang, Hang Su, Jun Zhu, Yuefeng Chen, and Hui Xue.
+     Towards face encryption by generating adversarial identity masks. In Proceedings of the
+     IEEE/CVF International Conference on Computer Vision (ICCV), pages 3897–3907, October
+     2021.
+[21] Bangjie Yin, Wenxuan Wang, Taiping Yao, Junfeng Guo, Zelun Kong, Shouhong Ding, Jilin Li,
+     and Cong Liu. Adv-makeup: A new imperceptible and transferable attack on face recognition. In
+     Zhi-Hua Zhou, editor, Proceedings of the Thirtieth International Joint Conference on Artificial
+     Intelligence, IJCAI 2021, Virtual Event / Montreal, Canada, 19-27 August 2021, pages 1252–
+     1258. ijcai.org, 2021. doi: 10.24963/IJCAI.2021/173. URL https://doi.org/10.24963/
+     ijcai.2021/173.
+[22] Kaipeng Zhang, Zhanpeng Zhang, Zhifeng Li, and Yu Qiao. Joint face detection and alignment
+     using multitask cascaded convolutional networks. IEEE Signal Processing Letters, 23(10):
+     1499–1503, 2016.
+[23] Richard Zhang, Phillip Isola, Alexei A. Efros, Eli Shechtman, and Oliver Wang. The unrea-
+     sonable effectiveness of deep features as a perceptual metric. In Proceedings of the IEEE
+     Conference on Computer Vision and Pattern Recognition (CVPR), June 2018.
+[24] Yaoyao Zhong and Weihong Deng. OPOM: customized invisible cloak towards face privacy
+     protection. IEEE Trans. Pattern Anal. Mach. Intell., 45(3):3590–3603, 2023. doi: 10.1109/
+     TPAMI.2022.3175602. URL https://doi.org/10.1109/TPAMI.2022.3175602.
+[25] Jun-Yan Zhu, Taesung Park, Phillip Isola, and Alexei A. Efros. Unpaired image-to-image
+     translation using cycle-consistent adversarial networks. In Proceedings of the IEEE International
+     Conference on Computer Vision (ICCV), Oct 2017.
+
+
+                                                 11
+A     Appendix: Supporting Derivation for Proposition 1
+This appendix provides a short derivation supporting Proposition 1. The goal is not to establish a
+formal security theorem, but to clarify why reduced mutual information between the protected output
+and the identity embedding is consistent with increased difficulty of feature estimation.
+Let
+                                           h = ϕ(x) ∈ Rd
+denote the identity embedding extracted from the clean input x, and let
+                                            z = G(x, k)
+denote the protected output generated from x and key k. We consider an adversary that estimates h
+from z under squared error.
+For any estimator A, the expected reconstruction error is
+                                        E ∥A(z) − h∥22 .
+                                                         
+                                                                                                   (9)
+The estimator that minimizes this quantity is the conditional expectation
+                                          A∗ (z) = E[h | z],                                     (10)
+and the corresponding minimum mean-squared error is
+                  MMSE(h | z) = inf E ∥A(z) − h∥22 = E ∥h − E[h | z]∥22 .
+                                                                    
+                                                                                                 (11)
+                                      A
+
+This identity shows that the best achievable feature-estimation performance is determined by the
+conditional uncertainty of h given the protected observation z.
+From an information-theoretic perspective, the uncertainty in h after observing z is characterized
+by the conditional entropy H(h | z) or, in the continuous setting, by the conditional differential
+entropy h(h | z). Moreover, the mutual information decomposes the uncertainty in h into a marginal
+term and a conditional term. Therefore, if the mutual information between h and z is reduced while
+the marginal uncertainty of h remains fixed, the uncertainty that remains after observing z becomes
+larger.
+Under standard regularity conditions, larger conditional uncertainty is generally associated with
+weaker recoverability of the identity embedding from the protected observation. This is the sense in
+which the protection mechanism is intended to reduce feature leakage: by decreasing the information
+about h that is preserved in z, it makes identity-related feature estimation more difficult for an
+adversary on average.
+We emphasize that this derivation is interpretive rather than a proof of a universal closed-form lower
+bound on estimation error solely in terms of mutual information. It does not establish cryptographic
+irreversibility, formal inversion resistance, or provable security. Its role is limited to providing a
+principled explanation for why reducing feature leakage is a meaningful objective for the proposed
+key-conditioned protection mechanism.
+
+B     Experimental Setup Details
+B.1   Datasets and Protocols
+
+(1) LFW: Represents an unconstrained recognition scenario with variations in pose, lighting, and
+expression. Following the protocol in [2, 1], we filter identities with at least 15 images to simulate
+users who actively post photos online. For each identity, we randomly split images into a reference
+set (for protection generation) and a probe set (for evaluation), ensuring no data leakage.
+(2) FaceScrub: Used for identity-level robustness and generalization analysis. Its broad identity
+coverage supports rigorous evaluation of protection transferability across subjects.
+All facial images in both datasets are pre-processed using MTCNN [22] for detection and alignment,
+then resized to 112 × 112 resolution, and finally normalized to the [−1, 1] standard range before
+being fed into the protection network.
+
+
+                                                 12
+B.2     Face Recognition Models
+
+To comprehensively evaluate the robustness and transferability of our protection, we employ the same
+diverse collection of publicly available pretrained FR models as in Chameleon [2], detailed in Table 7.
+These models cover a wide range of architectures and training subsets.
+
+                     Table 7: The collection of publicly available pretrained FR models.
+
+                         Model ID          Neural Arch.          Training Dataset           FR Acc.
+                          EN-MC             EfficientNet           MS-Celeb-1M              94.94%
+                         RN50-GL             ResNet50               Glint360K               96.68%
+                        RN50-MC              ResNet50              MS-Celeb-1M              89.25%
+                         RN50-VF             ResNet50               VGG-Face2               94.30%
+                        RN50-WF              ResNet50              WebFace600K              96.72%
+                        RN18-MC              ResNet18              MS-Celeb-1M              82.64%
+                        RN34-MC              ResNet34              MS-Celeb-1M              84.49%
+                        RN100-MC            ResNet100              MS-Celeb-1M              91.85%
+
+
+B.3     Implementation Details
+
+All experiments are implemented in TensorFlow and executed on a single NVIDIA RTX 4060 GPU.
+The protection generator follows the ResNet-based key-conditioned architecture described in the
+main method section, and the condition encoder is implemented as a lightweight MLP. Following the
+optimization protocol in Chameleon [2], we use the Adam optimizer with a learning rate of 2 × 10−4
+and a batch size of 16. The balancing hyperparameters are set to λrec = 10, λid = 5, and λrev = 1.0,
+which were found empirically to provide stable convergence.
+To model adaptive restoration attacks, we train a separate reversal network on the clean LFW training
+split until convergence and use it as the surrogate adversary in evaluation. The secret key k and
+nonce m are encoded as 256-bit and 64-bit binary vectors, respectively. The identity loss Lid is
+implemented as a cosine embedding loss over intermediate features extracted by a pretrained FR
+network. For paired inverse-attacker training, the surrogate adversary uses a batch size of 32, an
+initial learning rate of 10−4 decayed by 0.95 every 10 epochs, and paired samples generated from the
+underlying dataset.1
+
+C      Qualitative purification examples
+As shown in Fig. 10, the evaluated purification pro-
+cedure produces visually more identity-consistent
+outputs for Chameleon than for ARFP. Under the
+same attack setting, the ARFP examples remain
+heavily distorted, indicating weaker recovery qual-
+ity for the attacker in this qualitative comparison.
+These examples should be interpreted as illustra-
+tive evidence for the evaluated procedure rather
+than as a general statement about all possible
+restoration attacks.
+
+D      Discussion and Limitations                    Figure 10: Qualitative purification examples.
+                                                     The evaluated attack procedure recovers more
+                                                     identity-consistent structure from Chameleon
+While ARFP demonstrates strong protection capa- outputs (Top), whereas ARFP outputs (Bottom)
+bilities, there are several aspects worth discussing remain substantially distorted under the same
+regarding its practical deployment.                  procedure.
+Computational Overhead. Compared to traditional
+additive noise attacks like Fawkes, our method involves a forward pass through an adaptive reversal
+    1 The code will be made publicly available after review; it is omitted here for anonymity.
+
+
+
+
+                                                              13
+network, which is slightly more computationally intensive but still efficient. The primary cost lies in
+the training phase, where the adversarial loop requires oscillating updates. However once trained,
+the generation of personalized protection is highly efficient due to its feed-forward design, making it
+feasible for real-time user-end applications.
+Physical World Robustness. Our current evaluation focuses on the digital domain. In real-world
+scenarios where protected images might be printed and recaptured (print-scan attack), the high-
+frequency components of the adversarial perturbation and the fragile integrity indicator (Nonce)
+might be degraded. Enhancing the robustness of both the protection and the watermark against analog
+transformations remains a direction for future work.
+Key Management. The security of our reversibility relies entirely on the secrecy of the user key ku .
+This design choice, while structurally sound, introduces a key management burden. If a user loses
+their key, the original image cannot be mathematically recovered from the protected version. This
+intentional "failure" ensures that no backdoor exists for unauthorized parties, but it requires users to
+securely store their keys.
+
+
+
+
+                                                  14
+

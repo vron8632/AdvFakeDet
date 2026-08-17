@@ -1,0 +1,1060 @@
+BIG DATA MINING AND ANALYTICS
+ISSN 2096-0654 05/15 pp719−734
+DOI: 10.26599/BDMA.2025.9020070
+Volume 9, Number 3, June 2026
+
+
+
+          Image Copyright Dual-Protection Based on Extractable and
+                   Imperceptible Adversarial Watermark
+
+                          Yuming Liu, Shan Ai*, Zhili Zhou*, Wei Pang, Changyu Dong,
+                                 Huilin Ge, Daizhi Liao, and Yongfeng Huang
+
+    Abstract: Generally, there are two popular ways to protect image copyright, i.e., proactive protection
+    (preventing illegal use via adversarial perturbation) and passive protection (verifying ownership by digital
+    watermarking). However, since the perturbation and watermark embedded into an image will interfere with each
+    other, directly embedding them into the image cannot achieve the proactive protection and passive protection,
+    simultaneously. To address this issue, we propose an image copyright dual-protection approach, which
+    embeds an Extractable and Imperceptible Adversarial Watermark (EIAW) in the image frequency-domain.
+    Specifically, the adversarial watermark is automatically embedded and optimized in the manner of allowing for
+    effectively attacking the Deep Neural Networks (DNNs) and accurately extracting the embedded watermark,
+    simultaneously. Moreover, instead of using the pixel-domain constraints, i.e., L p norms, we introduce a
+    frequency-domain constraint to optimize the watermark embedding locations. Experiments on ImageNet and
+    CIFAR-10 demonstrate that the proposed EIAW achieves high attack effectiveness (up to 100%) and extraction
+    accuracy (up to 93%), while maintaining good watermark imperceptibility.
+
+    Key words: adversarial attack; digital watermark; adversarial watermark; copyright protection; dual-protection
+
+
+
+
+1   Introduction                                                                     and analyzed by Deep Neural Networks (DNNs) to
+                                                                                     obtain sensitive semantic information, such as age and
+With the widespread use of portable devices and online                               gender[1]; Second, images distributed on networks
+platforms, social media platforms, such as Facebook,                                 could be illegally copied for unauthorized use.
+Twitter, and Instagram, have become the main                                         Therefore, in the era of artificial intelligence, it is
+channels for sharing images. However, sharing                                        urgently required to protect the image copyright both
+extensive images comes with two main risks. First,                                   before and after the illegal use of images. The image
+user-uploaded images may be automatically recognized                                 copyright dual-protection including the proactive
+  Yuming Liu and Daizhi Liao are with School of Computer Science and Cyber Engineering, Guangzhou University, Guangzhou 510000,
+  China. E-mail: lym@e.gzhu.edu.cn; ldz@e.gzhu.edu.cn.
+  Shan Ai, Zhili Zhou, and Changyu Dong are with School of Artificial Intelligence, Guangzhou University, Guangzhou 510000, China.
+  E-mail: aishan@gzhu.edu.cn; zhou_zhili@163.com; changyu.dong@gzhu.edu.cn.
+  Wei Pang is with School of Mathematical and Computer Sciences, Heriot-Watt University, Edinburgh EH14 4AS, UK. E-mail:
+  w.pang@hw.ac.uk.
+  Huilin Ge is with College of Automation, Jiangsu University of Science and Technology, Zhenjiang 212013, China. E-mail:
+  ghl1989@just.edu.cn.
+  Yongfeng Huang is with Zhongguancun Laboratory, Beijing 100094, China, and also with Department of Electronic Engineering,
+  Tsinghua University, Beijing 100084, China. E-mail: yfhuang@tsinghua.edu.cn.
+* To whom correspondence should be addressed.
+  Manuscript received: 2025-02-21; revised: 2025-05-20; accepted: 2025-06-09
+
+                          © The author(s) 2026. The articles published in this open access journal are distributed under the terms of the
+                             Creative Commons Attribution 4.0 International License (http://creativecommons.org/licenses/by/4.0/).
+720                                                                              Big Data Mining and Analytics, June 2026, 9(3): 719−734
+
+protection (preventing the illegal use) and the passive     illustrate the differences among the adversarial attack,
+protection (verifying image ownership after the illegal     digital watermark, and the proposed EIAW in Fig. 1.
+use) has become more and more important.                       In summary, our main contributions are summarized
+   Generally, there are two popular ways to protect         as follows:
+image copyright, i.e., adversarial attack and digital          ● EIAW is proposed for image copyright dual-
+watermarking. The adversarial attack[2−5] usually adds      protection: Unlike existing adversarial attack or digital
+an adversarial perturbation into a copyrighted image to     watermark methods, EIAW allows for effectively
+mislead the model inference process, thereby                attacking DNNs and accurately extracting the
+preventing the illegal use of the image. However, such      watermark, enabling image copyright dual-protection.
+adversarial perturbations are added into images in an          ● Frequency domain constraint is designed to
+irreversible way and thus cannot be extracted               optimize the imperceptibility of the adversarial
+accurately for verifying the image ownership. The           watermark: Instead of using L p norms to limit the
+digital watermarking[6−9] can embed a watermark into        perturbation in the pixel domain, we introduce a
+an image to verify ownership after unauthorized use.        frequency domain constraint to optimize the watermark
+However, digital watermarking cannot prevent illegal        embedding locations, achieving more imperceptible
+use or copyright infringement in advance. To achieve        adversarial watermarked images.
+copyright dual-protection, the most intuitive manner is        ● Superiority of the proposed approach is proven
+to embed both a digital watermark and an adversarial        by extensive experiments: Extensive experiments
+perturbation into an image, sequentially. However, the      show that the proposed EIAW method not only
+embedded digital watermark and adversarial                  achieves comparable attack effectiveness and
+perturbation may affect each other, which makes the         efficiency to state-of-the-art methods, i.e., PGD, but
+watermark difficult to be extracted and the adversarial     also maintains high watermark imperceptibility,
+perturbation ineffective. In addition, some adversarial     accurate watermark extraction, and robustness against
+watermarking approaches[10, 11] have been proposed,         various noise attacks.
+which embed a watermark as the adversarial                     The structure of this paper is organized as follows.
+perturbation into images. However, they often fail to
+                                                                                                                              Proactive defense
+                                                            Adversarial attack
+
+
+
+
+enable accurate watermark extraction. Therefore,
+existing methods struggle to achieve effective dual-                                                               Predict:             Prevent
+                                                                                                                    corn ✗            illegal use
+protection of image copyright.
+                                                                                                         DNN
+   To solve the above issues, in this paper, we propose a                        Adversarial example
+dual-protection approach for image copyright based on                                                      (a)
+an Extractable and Imperceptible Adversarial                                                                                   Passive defense
+                                                            Digital watermark
+
+
+
+
+Watermark (EIAW). Specifically, we design a strategy
+                                                                                                                                        Verify
+for embedding and optimizing the adversarial                                                                                          ownership
+watermark using modulo operations in the frequency                                                     Extractor
+                                                                                 Watermarked image
+domain. It first generates and embeds a base
+                                                                                                           (b)
+adversarial watermark in the frequency embedding
+                                                                                                        DNN                     Dual defense
+space, and then automatically optimizes it to attack
+                                                                                                                   Predict:            Prevent
+DNNs within an embedding subspace without affecting
+                                                            EIAW(ours)
+
+
+
+
+                                                                                                                    corn ✗           illegal use
+the extractability of the watermark. As a result, this
+                                                                                                                                       Verify
+approach can effectively attack DNNs while allowing                                                                                  ownership
+                                                                                    Adversarial
+the embedded watermark to be accurately extracted.                               watermarked image     Extractor
+
+Additionally, unlike traditional methods that rely on L p                                                  (c)
+norms for optimizing the adversarial watermark in the
+                                                            Fig. 1 Comparison of different approaches. (a) Proactive
+pixel domain[3−5], which has been proven to poorly
+                                                            protection via adversarial attack is able to prevent illegal
+align with human perception[12]. We introduce a             use, (b) passive protection via digital watermark is able to
+frequency domain constraint to optimize watermark           verify ownership, and (c) our dual-protection approach
+embedding locations, which ensures the final                based on EIAW can prevent illegal use and verify
+watermarked images maintain high quality. We                ownership, simultaneously.
+Yuming Liu et al.: Image Copyright Dual-Protection Based on Extractable and Imperceptible Adversarial Watermark     721
+
+Section 2 discusses the related work. Section 3                 generating more imperceptible adversarial examples.
+describes the proposed EIAW method in detail. Section           However, recent studies show that L p norms do not
+4 presents and analyzes the experimental results.               align well with human perception[12]. Therefore, other
+Section 5 concludes the paper.                                  perceptual distances, such as Structural Similarity
+                                                                Index Measure (SSIM)[20] and Learned Perceptual
+2     Related Work
+                                                                Image Patch Similarity (LPIPS)[21], have been used to
+In this section, we review relevant works in three areas:       improve imperceptibility. Inspired by this, our work
+adversarial attack, digital watermarking, and                   introduces a frequency domain constraint to generate
+adversarial watermark attacks.                                  perturbations that are less perceptible to human vision,
+                                                                achieving highly imperceptible adversarial watermarks.
+2.1   Adversarial attack
+                                                                2.2   Digital watermarking
+Adversarial attack deceives DNNs by adding small
+perturbations to images. These perturbations can alter          Digital watermarking embeds meaningful information,
+the model’s predictions, preventing DNNs from                   such as copyright ownership, content description into
+accurately analyzing the image and thus protecting the          digital content. It provides an effective solution for
+image’s semantic information. Early research by                 copyright protection, and is widely used to track and
+Szegedy et al.[2] introduced adversarial perturbations          prevent copyright infringement[6, 22−24].
+using back-propagation and gradient-based algorithms.             In general, digital watermarks can be classified into
+Since then, various methods have been proposed to               visible and invisible watermarks based on their visual
+generate adversarial examples[3−5, 13, 14]. A well-known        effects. Visible watermarks[7] are more perceptible to
+gradient-based method is the Fast Gradient Sign                 human eyes, making them more susceptible to targeted
+Method (FGSM)[5], which crafts perturbations by                 attacks and modifications. In contrast, invisible
+taking a step in the direction of the gradient. Similarly,      watermarks[8, 9, 25] use data redundancy techniques that
+the Projected Gradient Descent (PGD) attack[3], often           typically bypass the human visual system. Recent
+considered state-of-the-art, updates perturbations              advances in invisible watermarking have focused on
+iteratively starting from random initialization.                enhancing robustness against complex distortions. For
+   The above methods are usually carried out in the             instance, Li et al.[26] proposed a grayscale deviation
+pixel domain, recent research has also explored                 simulation method to resist screen-shooting distortions,
+adversarial attacks in the frequency domain. For                while Fu et al.[27] developed a wavelet-based recovery
+example, Wang et al.[15] demonstrated the sensitivity of        network to maintain watermark integrity under various
+DNNs to high-frequency components, leading to the               image processing operations. These works demonstrate
+                                                                the importance of domain-specific transformations for
+development of frequency domain adversarial attacks.
+                                                                robust watermarking, which aligns with our frequency
+Luo et al.[16] proposed a method that enhances
+                                                                domain approach. Furthermore, Liao et al.[28] showed
+imperceptibility by minimizing differences between the
+                                                                that robust feature extraction in compressed media can
+low-frequency components of clean and adversarial
+                                                                effectively preserve critical information, further
+images. S2I-FGSM[17] enhances transferability through
+                                                                supporting our choice of frequency domain embedding
+spectrum transformations in the frequency domain.
+                                                                for adversarial watermarking. Additionally, depending
+AdvDrop[18] takes a unique approach by crafting
+                                                                on whether the original image is required for
+adversarial examples through information removal                extraction, watermarking methods are classified as
+rather than addition, demonstrating that minimal                blind or non-blind. Non-blind methods merge the
+frequency component manipulation can significantly              original and watermark images, requiring the original
+impact model performance. While Guo et al.[19]                  image during extraction. Blind watermarking embeds
+constrained perturbations to specific frequency bands           watermarks directly using specific rules, allowing
+to reduce the number of black-box queries, our work             extraction without the original image. In this work, we
+focuses on optimizing perturbations in these bands to           employ an invisible, blind-extractable watermark in the
+improve both attack effectiveness and watermark                 frequency domain to craft adversarial watermarks.
+imperceptibility.
+   Despite these advancements, L p norms are                    2.3   Adversarial watermark attacks
+commonly used to constrain perturbations for                    Recent studies have explored using watermarks as
+722                                                                    Big Data Mining and Analytics, June 2026, 9(3): 719−734
+
+adversarial perturbations to attack DNNs. Jia et al.[10]         is the predicted probability for class i .
+proposed the Basin Hopping Evolution (BHE)                          Let Iadv denote the adversarial example, Iw denote the
+algorithm to embed visible watermarks into images,               watermarked image after embedding the base
+causing inference errors in DNNs. Jiang et al.[29]               watermark, Wout denote the extracted watermark, F
+improved this with a fast differential evolution method.         represent the frequency domain coefficient matrix of
+Zuo et al.[30] enhanced the Multi-swarm Particle                 the cover image, Fw denote the frequency-domain
+Swarm Optimization (MPSO) algorithm to conduct                   matrix after watermark embedding, and Faw denote the
+extensive attack experiments. However, all above                 adversarial frequency domain matrix generated during
+methods add watermarks in the pixel domain and use               the attack process. We use the Discrete Cosine
+visible watermarks to attack. It is clear that visible           Transform (DCT) to convert the cover image from the
+watermarks degrade the quality of the protected images           pixel domain to the frequency domain, and employ the
+and are easy to notice. To generate more imperceptible           Inverse DCT (IDCT) to revert it back.
+images, Zhang et al.[11] introduced a frequency domain              The goal of adversarial attacks is to craft Iadv such
+adversarial watermarking framework, which embeds                 that f (Iadv ) , y , while the aim of blind watermarking is
+adversarial watermarks in the frequency coefficients.            to embed a watermark Win into the cover image to
+Although this watermark is invisible, they still need the        obtain the watermarked image Iw , from which the
+original image for extraction, limiting its practical use.       watermark information Wout can be extracted
+  Some studies have used adversarial watermarks to               accurately. Different from the above two methods, our
+protect image copyright. For example, Zhu et al.[31]             goal is to embed and optimize a watermark into the
+proposed adversarial examples with embedded                      image I while allowing for effectively attacking DNNs
+watermarks to stop generative models from copying                and      accurately        extracting     the   watermark,
+unauthorized images. Wang et al.[32] designed an end-            simultaneously. In this paper, we propose a novel
+to-end Adversarial Watermark Fusion Model (AWFM)                 frequency domain adversarial watermark algorithm
+that combines watermark embedding and adversarial                EIAW, which can generate extractable and
+perturbations into a single task to generate invisible           imperceptible adversarial watermark. The pipeline of
+adversarial watermarked images. However, training                the EIAW approach is shown in Fig. 2.
+these models is challenging because they require                    Next, we will first introduce the frequency domain
+optimizing multiple objectives simultaneously.                   constraint, followed by a detailed presentation of our
+  In this paper, we propose a dual-protection                    proposed EIAW, approach by three parts: watermark
+adversarial watermarking framework. It embeds                    embedding, watermark optimization, and watermark
+extractable watermarks into the frequency coefficients           extraction.
+under the constraints, ensuring imperceptibility while           3.2   Frequency domain constraint
+enabling watermarks can be extracted accurately.
+                                                                 In digital watermarking, watermarks are often
+3     Methodology                                                embedded in the frequency domain. This approach
+                                                                 inspires us to craft watermark perturbations directly in
+3.1   Overview                                                   the frequency domain. To evaluate the effectiveness of
+                                                                 perturbations in different frequency regions, we
+Given an original watermark image Win ∈ RN×N , a
+                                                                 calculate the gradients of the loss function L with
+cover image I ∈ RN×N , its ground-truth label y , and a
+                                                                 respect to both the frequency domain image F and the
+DNN classifier f : I → Rk that maps the image to an
+                                                                 pixel domain image I ,
+output vector representing a probability distribution
+over the discrete label set {1, 2, . . . , k} , where k is the                         ∂L (θ, IDCT (F), y) ∂I
+                                                                              ∇F L =                      ·               (1)
+number of classes. We use the cross-entropy as the loss                                         ∂I          ∂F
+function, denoted by L . The formula for the cross-                                             ∂L (θ, I, y)
+                                                                                       ∇I L =                             (2)
+entropy loss is                                                                                     ∂I
+                         ∑
+                         k                                       where θ represents the model parameters, ∇F L and ∇I L
+                  L=−          yi log ( f (I)i ),                are the gradients of the loss function L with respect to
+                         i=1                                     the input image F (in the frequency domain) and the
+where yi is the ground-truth label for class i , and f (I)i      image I (in the pixel domain), respectively, and y is the
+Yuming Liu et al.: Image Copyright Dual-Protection Based on Extractable and Imperceptible Adversarial Watermark                                                       723
+
+
+                                                                                                                                    Next iteration
+
+                                                                                                                                                                No
+                                     DCT
+                                                                                 W                                     W′                                   Attack
+                                                 Mask      Embedder                           Optimizer
+                                                                                                                                                           succeed?
+                                                                      Key p
+                                                                                                                                        DNN                     Yes
+                         I                        F                               Fw                                     Faw
+             m
+                                                                                           p·sgn(
+                                                                                                    Δ
+     n   1   1   1   1
+                                     Frequency                                                          Fw   L)·M
+         1   1   1   1
+         1
+         1
+             1
+             1
+                 1
+                 1
+                     1
+                     1               constrain                                                                              IDCT
+
+
+
+                             M                                  Win                                                                    Iaw
+
+Fig. 2 Pipeline of the proposed EIAW approach. Operator ⊕ denotes a additive update that applies a masked signed-gradient
+perturbation to the watermarked image.
+
+true label of the cover image.                                                            mid-to-low frequency regions (top-left in each
+  The magnitude of these gradients indicates how                                          subfigure in Fig. 3) exhibit larger gradients, while
+changes at each location affect the loss. In other words,                                 high-frequency regions (bottom-right in each subfigure
+regions with larger gradients have a greater influence                                    in Fig. 3) have smaller gradients. This means that
+on the model’s inference.                                                                 perturbations in mid-to-low frequency regions achieve
+  To make it more intuitive, we visualize the gradient                                    better attack performance. Even small perturbations in
+heatmaps in Fig. 3. From the heatmaps, we observe                                         these regions can significantly affect the model’s
+that the gradient distribution in the pixel domain lacks                                  predictions. Although these perturbations may cause
+distinct patterns. In contrast, the frequency domain                                      some degradation in image quality, the improved attack
+gradient distribution shows a clear trend. Specifically,                                  effectiveness outweighs the visual loss. Overall,
+
+
+
+
+                             V                                   V                                       V
+
+
+
+                                                                                                                                                        0.020
+                                                                                                                                                        0.018
+                                              U                                    U                                         U                          0.016
+                                 (a) Gradient heatmap of the          (b) Gradient heatmap of the              (c) Gradient heatmap of the
+                                                                                                                                             Gradient
+
+
+
+
+                                                                                                                                                        0.014
+                                    red (R) channel in the              green (G) channel in the                  blue (B) channel in the               0.012
+                                      frequency domain                     frequency domain                         frequency domain                    0.010
+                                                                                                                                                        0.008
+                                                                                                                                                        0.006
+
+
+
+                             Y                                   Y                                       Y
+
+
+
+
+                                             X                                     X                                         X
+                             (d) Gradient heatmap of the red          (e) Gradient heatmap of the            (f) Gradient heatmap of the blue
+                              (R) channel in the pixel domain           green (G) channel in the              (B) channel in the pixel domain
+                                                                             pixel domain
+
+Fig. 3 Gradient heatmaps of the RGB channel in the frequency domain (a)−(c) and pixel domain (d)−(f). In the pixel domain,
+the axes X and Y denote the spatial coordinates of the image. In the frequency domain, the axes U and V denote the horizontal
+and vertical frequency coordinates obtained after applying the DCT, respectively.
+724                                                              Big Data Mining and Analytics, June 2026, 9(3): 719−734
+
+                                                                                                   p
+disturbances in low and medium frequencies are more                        if F(u, v) mod p <        ,
+cost-effective.                                                                                    2
+                                                                                                    p
+  Based on this observation, we design a frequency                         then F(u, v) ←− F(u, v) + ,
+                                                                                                    2
+domain constraint to limit watermark perturbations to                      else F(u, v) ←− F(u, v)                   (4)
+mid-to-low frequency regions. Specifically, we assign
+                                                             F = DCT (I) represents the frequency-domain
+the value “1” to locations within the mid-to-low
+                                                           coefficient matrix obtained by applying the DCT to
+frequency areas, allowing perturbations to be added.
+                                                           image I . The entry at position (u, v) is written as
+All other regions are assigned the value “0”, creating a
+                                                           F (u, v) . The parameter p is the embedding key, which
+binary mask M ,
+                                                           must be an even integer.
+                 
+                 
+                 
+                 1, if m ⩽ u, v ⩽ n                         By modifying the DCT coefficients according to the
+               M=
+                 
+                 0, otherwise                             above embedding strategy, we successfully embed the
+                                                           watermark and obtain the base watermarked image Iw .
+where m, n ∈ [0, N] , and N represents the dimension of    The embedding process is described in Algorithm 1.
+the    frequency-domain      coefficient    matrix   F,
+                                                           Notably, since explicit for-loops are computationally
+equivalently, is the dimension of the pixel domain
+                                                           inefficient, we leverage PyTorch’s array slicing
+image I. u and v denote the horizontal and vertical
+                                                           operations to achieve implicit parallel computation,
+coordinates in the frequency domain, respectively. The
+                                                           accelerating the watermark embedding.
+size of the mask is denoted as α = (n − m)/N ∈ [0, 1] ,
+while the starting position of the mask is defined as      3.4   Watermark optimization
+β = m/N . For images with multiple color channels, the     To obtain the adversarial watermark without affecting
+same masking strategy is applied independently to each     the watermark extraction, we optimize the watermark
+channel.                                                   by changing the modification magnitudes of frequency
+  During the watermark embedding and optimization          coefficients to attack DNNs within the embedding
+stages, we only modify the DCT coefficients in regions     subspace. In such manner, the remainders of DCT
+where the mask value is 1. This ensures that the           coefficients when divided by p can be kept unchanged,
+watermark perturbations are confined to the mid-to-low     and thus the extractability will not be affected.
+frequency areas.                                           Specifically, to optimize the watermark in the
+3.3   Watermark embedding                                  frequency domain embedding subspace, we propagate
+                                                           the gradient of the loss using the following chain rule
+To enable accurate watermark extraction without
+                                                           in Eq. (1). Then, we update the DCT coefficients by
+requiring the cover image, we introduce the watermark
+embedding and extracting strategy based on modulo          Algorithm 1 EIAW embedding process
+operation in the frequency domain. First, the image is     Input: Cover image I , watermark win , modulus p , and mask M
+transformed from the pixel domain to the frequency         Output: Watermarked image Iw
+domain, where watermark bits are embedded by               1: F = DCT (I) ;
+adjusting frequency coefficients based on the              2: for (u, v) in the mask region, M =1 do
+remainder of the modulo operation. More details are        3:    if win (u, v) = 1 then
+given as follows.                                          4:       if F(u, v) mod p ⩾ p/2 then
+   Within the masked region, where the watermark bit       5:          F(u, v) ← F(u, v) + p/2 ;
+win =1, the DCT coefficients are modified according to     6:       end if
+the strategy in Eq. (3):                                   7:    else
+
+                                  p                        8:       if F(u, v) mod p < p/2 then
+             if F(u, v) mod p ⩾     ,                      9:          F(u, v) ← F(u, v) + p/2 ;
+                                  2
+                                      p                    10:       end if
+             then F(u, v) ←− F(u, v) + ,
+                                      2                    11: end if
+             else F(u, v) ←− F(u, v)                 (3)   12: end for
+
+  Conversely, when the watermark bit win =0, we            13: Iw = IDCT (F) ;
+perform the strategy in Eq. (4):                           14: return Iw
+Yuming Liu et al.: Image Copyright Dual-Protection Based on Extractable and Imperceptible Adversarial Watermark                     725
+
+stepping in the direction of the gradient. To avoid                                               Y
+                                                                             Decision                        Embedding subspace
+affecting the extractability of the watermark, the                                           4p
+                                                                             boundary
+remainders of the DCT coefficients should remain                                                             First iteration
+
+unchanged. Therefore, the step size must be an integer                                       3p              Second iteration
+
+multiple of p . The specific formula is as Eq. (5):                                    ∆F2                       End
+                                                                                             2p                  point
+                 t+1
+                Faw  = Faw
+                        t
+                           + p × sgn (∇F L) × M                  (5)
+where sgn (·) is the sign function, M represents the                                         p
+                                t          t+1
+frequency-domain mask. Faw          and Faw    denote the
+adversarial frequency-domain coefficient matrices at
+the t-th and (t+1)-th iteration, respectively.                                    −p              0    p   2p            3p     X
+                                                                                       Initial
+                                                                                       point               ∆F1
+  Assuming the attack succeeds after t + 1 iterations,
+                                                                                                  −p
+Faw = Fawt+1
+             denotes the frequency domain adversarial
+watermarked image. Then, we convert it back to the                     Fig. 4 Visualization of the watermark optimization process.
+pixel domain to obtain the final image Iaw ,                           The X and Y axes in the 2D space represent the modification
+                                                                       magnitudes of DCT coefficients, i.e., ∆F1 and ∆F2 ,
+                   Iaw = Clip (IDCT (Faw ), 0, 1)                (6)   respectively. The 2D space represents the embedding space,
+where Clip (·) is the operation that restricts the resulting           and the set of green points in the 2D space represents the
+values to the range [0, 1]. Algorithm 2 describes the                  embedding subspace in which the adversarial watermark
+pseudo-code of optimization algorithm. By optimizing                   can be optimized without affecting its extractability.
+the watermark to attack DNNs within a frequency
+                                                                       3.5   Watermark extraction
+domain embedding subspace without affecting the
+extractability of the watermark, we achieve the dual                   Watermark extraction is the inverse process of
+goals of preventing illegal use and verifying                          embedding. Specifically, given the adversarial
+                                                                                            ′
+ownership, simultaneously. To provide a clear                          watermarked image Iaw  , we first convert it to frequency
+visualization of the constrained optimization process,                 domain, then, in the region where M = 1 , the
+we illustrate the optimization process in Fig. 4.                      watermark is extracted using the following strategy:
+                                                                                           c−1 (
+                                                                                                              p)
+Algorithm 2     EIAW optimization process                                                  ∑
+                                                                                     
+                                                                                     
+                                                                                                  ′               c
+Input: Classifier f with loss function L , cover image I , label y ,                 
+                                                                                     1, if      (Faw modp) <    ⩾⌈ ⌉
+                                                                              Wout = 
+                                                                                                             2    2                (7)
+watermark Win , and key p                                                            
+                                                                                     
+                                                                                     
+                                                                                             0
+Output: Adversarial watermarked image Iaw
+                                                                                     0, otherwise
+1: F = DCT (I) ;                                                                ′ = DCT (I ′ )
+                                                                       where Faw            aw denotes the DCT matrix, and c
+2: Fw = Embed (F, Win , p, M) ;
+                                                                       denotes the number of pixel channels, with c = 3 for
+3: Initialize: iter ← 0 , attack_successful ← false ;
+                                                                       RGB images. Finally, Wout is extracted to recover the
+4: while iter ⩽ Max_iter do
+5:   iter ← iter + 1 ;                                                 original watermark Win without the cover image.
+6:    Fw ← Fw + p × sgn (∇Fw L) × M ;
+                                                                         Notably, in addition to embedding 2D binary
+7:    Iaw ← IDCT (Fw ) ;                                               watermark images, our method also supports direct
+8:    if arg maxŷ f (Iaw ) , y then                                   embedding of arbitrary-length bit-streams. To achieve
+9:      attack_successful ← true ;                                     this, we employs Zigzag scanning[33] to convert DCT
+10:      break;                                                        coefficients into a 1D sequence. The bit-stream is then
+11: end if                                                             directly embedded into a selected mid-low frequency
+12: end while                                                          band whose length matches that of the bit-stream,
+13: if attack_successful then                                          enabling flexible and scalable embedding. The
+14: return Iaw ;                                                       embedding, optimization, and extraction procedures for
+15: else                                                               bit-streams follow the same strategy as those used for
+16: return false;                                                      image-based watermarks, ensuring consistency and
+17: end if
+                                                                       robustness.
+726                                                                   Big Data Mining and Analytics, June 2026, 9(3): 719−734
+
+4     Experiment                                                 capability, extraction accuracy, and imperceptibility of
+                                                                 different methods.
+In this section, we evaluate and compare the proposed
+                                                                    (1) Attack capability: Attack effectiveness and
+approach to demonstrate its performances in terms of
+                                                                 efficiency are evaluated using the Attack Success Rate
+attack effectiveness, efficiency, watermark extraction,
+                                                                 (ASR) and Attack Time (AT), respectively. ASR
+and imperceptibility. Typical experimental results of
+                                                                 measures the percentage of images for which the pre-
+EIAW approach are shown in Fig. 5. The original
+images can be correctly classified by ResNet101. After           trained model changes its prediction after the images
+embedding the adversarial watermarks generated by                are altered. AT measures the average time required to
+EIAW, they can mislead the pre-trained ResNet101                 attack a single image. In addition, we also report the
+while maintaining good visual quality.                           increase in cross-entropy loss (LOSS), where a larger
+                                                                 LOSS indicates a greater degradation of model
+4.1 Experiment setting
+                                                                 prediction accuracy, thus reflecting a more successful
+4.1.1 Dataset and model                                          attack.
+We evaluate the proposed EIAW approach on 1500                      (2) Imperceptibility: To sufficiently evaluate the
+images from the ImageNet-1K[34] and CIFAR-10                     watermark’s imperceptibility, we use the Peak Signal-
+datasets. We use ResNet101[35], AlexNet[36],                     to-Noise Ratio (PSNR), SSIM[20], and LPIPS[21]. These
+VGG19[37], SqueezeNet1_0[38], MobileNet_V2[39], and              metrics compare the quality of the watermarked image
+Inception_V3[40] as the target models.                           with the original image to assess how perceptible the
+4.1.2 Baseline
+                                                                 watermark.
+To compare the effectiveness and efficiency of the
+                                                                    (3) Extraction accuracy: The Extraction Accuracy
+watermark attack, we use several adversarial
+                                                                 Rate (EAR) measures the watermark’s extractability. It
+watermark attack methods: Adv-watermark[10],
+AFW[11], and MISPSO[30]. We also compare with                    is calculated as the ratio of the number of correctly
+typical gradient-based attack methods under the L p              extracted bits to the total number of bits. A higher EAR
+norms, including PGD[3], FGSM[5], and C&W[4].                    value, closer to 1, indicates more accurate extraction.
+Additionally, we compare with the two-phase method               4.1.4 Evaluation environment
+that adds perturbations and watermarks sequentially.             To make a fair comparsion, all experiments are
+4.1.3 Evaluation metric                                          conducted on an NVIDIA GeForce RTX 3090 GPU
+We use the following metrics to evaluate the attack              using the PyTorch framework in Python.
+
+
+          Original
+           image
+
+
+        True label    Granny smith   Airliner   Killer whale    Merganser      Porcupine        Fox         Chameleon
+
+
+        Protected
+           image
+
+
+
+      Predict label    Necklace       Wing        Sea lion     Oystercatcher   Echidna          Wolf          Mamba
+            PSNR        48.453       48.465       48.460          48.407        48.462        48.483          48.469
+             SSIM       0.9923       0.9893       0.9935          0.9949        0.9989        0.9917          0.9909
+
+
+        Extracted
+       watermark
+
+
+
+Fig. 5 Experimental results of the EIAW method. The first row shows the original images, the second row displays the
+corresponding true labels, the third row presents the protected images generated by EIAW, along with their predicted labels,
+PSNR and SSIM metrics, and the last row shows the extracted watermark images.
+Yuming Liu et al.: Image Copyright Dual-Protection Based on Extractable and Imperceptible Adversarial Watermark                 727
+
+4.2 Parameter setting                                                image quality. On the other hand, high-frequency
+                                                                     perturbations have a smaller impact on image quality
+In the proposed EIAW method, there are two key
+                                                                     but are less effective for attacks. Therefore, we
+parameters: p , which is the key to conducted modular
+                                                                     constrain the perturbations to the mid-low-frequency
+operation, and M , which determines where the
+                                                                     region, which strikes a balance between attack
+watermark perturbation is applied. We evaluate the
+                                                                     effectiveness and image quality.
+impact of these parameters on the method’s
+                                                                        Finally, if not specified, the watermark attack
+performance in terms of attack capability and
+                                                                     parameters in EIAW are set as follows:
+imperceptibility. The impacts of parameter p is shown
+                                                                     p = 2, α = 0, β = 0.5 , with a maximum of 20 iterations.
+in Table 1. As it illustrates, increasing p slightly
+                                                                     Additionally, a monitoring mechanism is used for all
+improves attack efficiency by reducing the attack time.
+                                                                     iterative attack methods: if the attack is successful, the
+However, this improvement comes at huge cost of                      iteration terminates early.
+image quality, as evidenced by the decrease in PSNR
+and SSIM and the increase in LPIPS as p grows.                       4.3    Comparison of attacking performance
+Therefore, we choose the smallest parameter p = 2 to                 By embedding an additional watermark into the
+minimize quality loss.                                               original image, we disrupt key local regions that are
+   The impact of the mask’s location is shown in Fig. 6.             essential for image classification, effectively
+Masks of the same size are applied to different                      misleading a well-trained neural network. To illustrate
+frequency regions: low-frequency (M1), mid-low-                      the impact of the adversarial watermark, we visualize
+frequency (M2), mid-high-frequency (M3), and high-                   the attention maps using Gradient weighted Class
+frequency (M4). The plots show how the loss and                      Activation Mapping (Grad-CAM)[41]. As shown in
+image quality metrics change over iterations. From Fig. 6,           Fig. 7, the clean images, correctly classified by
+it is clear that low-frequency perturbations are more                ResNet101, along with their attention maps and labels
+effective for attacks, as they cause the loss to increase            in green (Fig. 7a). The adversarial watermarked
+rapidly. However, they also significantly degrade                    images, along with their attention maps and labels in
+                                                                     red (Fig. 7b), by embedding an additional watermark
+Table 1 Impact of key p on attack time and watermark
+                                                                     into the original image, we disrupt key local regions
+imperceptibility. “ ↑ ” means larger is better, while “ ↓ ”
+means smaller is better.
+                                                                     that are essential for classification, thereby misleading
+                                 Imperceptibility                    the well-trained Resnet101[35] model.
+   p Attack time (s)                                                   To further quantitatively evaluate the attack
+                         PSNR ↑    SSIM[20] ↑ LPIPS[21] ↓
+   2      0.0911          51.819     0.9963       0.0011
+                                                                     performance of the proposed EIAW method, we
+                                                                     compare six attack methods across five widely used
+   4      0.0711          45.604     0.9888       0.0043
+                                                                     pretrained classification models (ResNet101, AlexNet,
+   6      0.0695          42.377     0.9782       0.0099
+                                                                     VGG19, Inception_V3, and SqueezeNet1_0) on
+   8      0.0652          40.027     0.9650       0.0178
+                                                                     ImageNet-1K[34] and CIFAR-10 datasets. Table 2
+  10      0.0634          38.183     0.9501       0.0273
+                                                                     shows the Attack Success Rates (ASR) of various
+           14                                   1.000                                        0.008
+           12                                   0.998                                        0.007
+                                                                                             0.006
+           10                                   0.996
+                                                                                             0.005
+            8                                   0.994
+                                                                                     LPIPS
+    LOSS
+
+
+
+
+                                                                                             0.004
+                                         SSIM
+
+
+
+
+            6                                   0.992                                        0.003
+            4                                   0.990                                        0.002
+                                                                                             0.001
+            2                                   0.988                                            0
+                                                0.986
+            0   1 2 3 4 5 6 7 8 9 10                    0 1 2 3 4 5 6 7 8 9 10                       0 1 2 3 4 5 6 7 8 9 10
+                  Number of iterations                      Number of iterations                         Number of iterations
+                         (a)                                       (b)                                          (c)
+                                                          M1    M2         M3   M4
+
+Fig. 6 Impact of the frequency domain mask’s location on image quality, showing the mask applied to different regions (M1,
+M2, M3, and M4) and illustrating the changes in LOSS, SSIM, and LPIPS across iterations.
+728                                                                              Big Data Mining and Analytics, June 2026, 9(3): 719−734
+
+                                                                           effectiveness to PGD[3], and outperforms other
+                                                                           adversarial watermark methods. We further evaluate
+                                                                           the black-box transferability of EIAW through
+                                                                           comprehensive cross-model validation. As shown in
+            Cockatoo                          Starfish                     Table 3, when adversarial examples generated from
+                               (a)
+                                                                           one model architecture are transferred to attack other
+                                                                           unseen models, these results demonstrate that our
+                                                                           frequency domain perturbations maintain reasonable
+                                                                           effectiveness across different architectures, making
+                                                                           them practical for real-world scenarios where the target
+      Corn (predicted wrong)         Goldfish (predicted wrong)            model may be unknown.
+                               (b)
+                                                                             Next, we evaluate the efficiency of the proposed
+Fig. 7 Effects of EIAW on the attention maps of neural                     method. Table 4 compares the attack efficiency of the
+networks (based on ResNet101 predictions). (a) Original                    EIAW method with the state-of-the-art PGD[3] attack
+image and the corresponding attention map, where the
+                                                                           and the adversarial watermark method AFW. As shown
+model makes correct predictions. (b) Adversarially
+                                                                           in Table 4, EIAW achieves an average ASR of 99.6%
+watermarked image and the corresponding attention map,
+where EIAW disrupts the model’s attention distribution,                    with a runtime of 0.0467 s. This is slightly slower than
+leading to incorrect predictions.                                          PGD, but much faster than AFW. This shows that,
+                                                                           despite the conversions between the frequency domain
+attack methods on different neural network models.
+                                                                           and pixel domain, the additional computational cost is
+Traditional attack methods, such as PGD[3] and
+                                                                           minimal. However, this minor time overhead provides
+C&W[4], achieve high ASRs across all models. The                           significant benefits, such as improved image quality
+Adv-watermark method[10], based on visible                                 and the ability to extract the watermark for dual
+watermarking, achieves an average ASR of 71.7%,                            protection, as demonstrated in the following sections.
+while the MISPSO[30] method, using the MPSO
+algorithm, reaches 75.9%. The AFW method, which                            4.4   Comparison of imperceptibility
+embeds the watermark in the frequency domain,                              To achieve a more secure and practical copyright
+achieves a high ASR of 97.4%. In comparison, our                           protection, the protected image should be visually
+proposed EIAW method achieves a comparable attack                          indistinguishable from the original image. In this
+Table 2 ASR comparison with various methods on ImageNet-1K against different models. Bold value indicates the best result
+in each column.
+                                                                                  ASR (%)
+           Attack
+                                 Resnet101[35]           Inception_V3[40]            Squeezenet1_0[38]        VGG19[37]         Average
+           PGD[3]                     100.0                       98.3                      100.0                99.4            99.4
+          FGSM[5]                      90.2                       83.9                       99.4                96.0            92.4
+          C&W[4]                       99.8                       98.5                      100.0                98.8            99.5
+      Adv-watermark[10]                78.0                       73.0                       69.1                64.8            71.7
+        MISPSO[30]                     68.9                       76.5                       85.4                73.1            75.9
+          AFW[11]                      98.2                       92.1                      100.0                99.6            97.4
+        EIAW (ours)                   100.0                       98.2                      100.0                99.6            99.5
+
+Table 3 Transferability of ASR for adversarial watermarked images across surrogate and attack models. Bold value indicates
+the best result in each column.
+                                                                           Transferability of ASR (%)
+         Surrogate model
+                                          ResNet101               VGG19              Inception_V3                SqueezeNet1_0
+           ResNet101                          100.0                 68.3                  62.5                           72.8
+             VGG19                            65.7                  99.6                  58.9                           70.2
+          Inception_V3                        63.2                  60.4                  99.6                           68.7
+         SqueezeNet1_0                        70.5                  66.8                  64.3                          100.0
+Yuming Liu et al.: Image Copyright Dual-Protection Based on Extractable and Imperceptible Adversarial Watermark                729
+
+ Table 4     Comparison of ASR and AT across different models and attack methods on ImageNet-1K and CIFAR-10 datasets.
+                                                                  PGD[3]                    AFW[11]            EIAW (ours)
+           Dataset                    Model
+                                                             ASR (%)       AT (s)     ASR (%)       AT (s)   ASR (%)      AT (s)
+                                  ResNet101[35]               100.0        0.0563       98.2       0.4302     100.0       0.0910
+                                    AlexNet[36]               100.0        0.0086       99.5       0.2997     100.0       0.0171
+                                    VGG19[37]                 99.5         0.0157       99.6       0.3264     99.6        0.0236
+    ImageNet-1K[34]
+                                 Inception_V3[40]             97.9         0.0633       92.1       0.4446     98.2        0.0806
+                                 Squeezenet1_0[38]            100.0        0.0131       100.0      0.3230     100.0       0.0211
+                                     Average                  99.5         0.0314       97.9       0.3647     99.6        0.0467
+                                   ResNet50[35]               100.0        0.0401       84.3       0.1264     99.8        0.1233
+                                    AlexNet[36]               96.7         0.0384       86.8       0.1334     100.0       0.0245
+      CIFAR-10[42]                  VGG19[37]                 99.3         0.0514       89.4       0.1611     100.0       0.0293
+                                 Mobilenet_V2[39]             100.0        0.0338       87.4       0.2309     98.7        0.1290
+                                     Average                  99.0         0.0409       87.0       0.1630     99.75       0.0765
+
+
+section, we compare the imperceptibility of watermarks                 values and lower LPIPS scores compared to other
+or perturbations generated by different methods. To                    methods. In comparison, attack methods such as
+sufficiently evaluate the imperceptibility, we use three               PGD[3] and FGSM[5], which constrain perturbation in
+standard metrics: PSNR, SSIM[20], and LPIPS[21].                       the pixel domain using L p norms, cause significant
+Higher PSNR and SSIM values indicate better image                      quality degradation. Other adversarial watermark
+quality, while lower LPIPS values reflect less                         methods, such as Adv-watermark, embed visible
+perceptual distortion, meaning the watermark or                        watermarks, making them more noticeable and leading
+perturbation is less noticeable to the human eye.                      to greater quality loss. Although AFW operates in the
+  As shown in Table 5, for the ResNet101 model,                        frequency domain, it applies perturbations to the entire
+EIAW achieves the highest PSNR of 52.68 and SSIM                       coefficient, resulting in noticeable distortions as well.
+of 0.9970, outperforming other methods. Its LPIPS                      In contrast, our method uses a frequency domain
+score of 0.0006 indicates that the perceptual difference
+                                                                       constraint to limit perturbations to specific regions,
+between the original and protected images is minimal.
+                                                                       achieving better image quality.
+Similar results are observed for other models, where
+EIAW consistently achieves higher PSNR and SSIM                        4.5    Watermark extraction performance
+Table 5 Comparison of imperceptibility against different               In this section, we evaluate the watermark extraction
+models under various attack methods on ImageNet-1K. Bold               performance of the proposed method. From Table 6,
+value indicates the best result in each column. “ ↑ ” means            we can see that EIAW achieves a high watermark EAR
+larger is better, while “ ↓ ” means smaller is better.                 of over 91% across different models. This level of
+                                          Imperceptibility             performance is sufficient for practical applications,
+  Model        Attack method
+                                 PSNR ↑ SSIM[20] ↑ LPIPS[21] ↓         such as copyright verification. We do not compare our
+                     PGD[3]       45.40     0.9896      0.0015         method with Adv-watermark and AFW here, as both
+                     FGSM[5]      36.21     0.9250      0.0309         require the original image for watermark extraction,
+ResNet101 Adv-watermark[10]       25.91     0.9604      0.0739         while our approach can extract the watermark based
+                     AFW[11]      36.07     0.9500      0.0120         Table 6 Average EAR of EIAW on different models. Bold
+                EIAW (ours)       52.68     0.9970      0.0006         value indicates the best result.
+                     PGD[3]       45.45     0.9886      0.0013                           Model                       EAR (%)
+                                                                                     ResNet101[35]                    92.10
+                     FGSM[5]      36.21     0.9206      0.0294
+                                                                                       AlexNet[36]                    93.19
+ VGG19       Adv-watermark[10]    25.11     0.9604      0.0711
+                                                                                    Inception_V3[40]                  92.68
+                     AFW[11]      36.49     0.9545      0.0100                         Vgg19[37]                      91.98
+                EIAW (ours)       51.29     0.9968      0.0008                      Squeezenet1_0[38]                 92.24
+730                                                                     Big Data Mining and Analytics, June 2026, 9(3): 719−734
+
+solely on the secret key p , which is more suitable for             From a theoretical perspective, our method modifies
+real-world applications.                                          DCT coefficients through constrained optimization,
+  The watermark should remain extractable even when               which is agnostic to the semantic content of the
+the image is distorted by various attacks. Therefore, to          embedded data. Whether the watermark is a 2D binary
+further demonstrate the robustness of the watermark               image or a 1D bit-stream, they are mathematically
+extraction, we conduct both qualitative and quantitative          isomorphic in the frequency domain. Moreover, the
+evidence of the watermark’s resilience to common                  energy distribution in the selected frequency band
+image processing operations. As shown in Fig. 8 and               remains consistent across different input formats,
+Table 7, we apply several common image distortions,               which ensures that the embedding process is format-
+such as JPEG compression, and cropping, and evaluate              independent. These demonstrate that our method not
+the watermark extraction performance under these                  only supports 2D binary watermark images, but also
+conditions. The results show that, although the                   generalizes well to arbitrary bit-streams, further
+extracted watermark images exhibit some distortion                extending its applicability to real-world digital
+after noise is added, the watermark remains                       copyright protection.
+recognizable. This demonstrates that our method can
+                                                                  4.7   Comparison with two-phase method
+preserve copyright information even under distortions.
+                                                                  To achieve copyright dual-protection, the most
+4.6 Bit-stream embedding evaluation                               intuitive manner is to embed the watermark and
+To further validate the flexibility and effectiveness of          perturbation sequentially, which we denote as the two-
+our method, we conduct an additional experiment using             phase method. To demonstrate the superiority of our
+bit-stream embedding instead of binary watermark                  method over the two-phase approach, we conducted
+images. Specifically, we adopt a Zigzag-based                     experiments in terms of the ASR, EAR, and
+encoding[33] strategy to directly embed arbitrary-length          imperceptibility.
+bit-streams into the mid-low frequency band of the                  The results are shown in Table 9, as we can see, in
+DCT domain, the length of this band is the same as the            terms of EAR, the proposed EIAW method achieves an
+length of the bit-stream. The experimental results are            extraction accuracy of 92.34%, outperforming the two-
+presented in Table 8. Across different bit-stream                 phase method. This is mainly because, when the
+lengths (512 bits to 4096 bits), the proposed method              perturbation and watermark are added sequentially,
+consistently achieves high PSNR values, indicating                they interfere with each other, making extraction more
+excellent imperceptibility. Notably, the watermark                difficult. And in terms of imperceptibility, because the
+extraction remains robust, with EAR improving as the              two-phase method requires two modifications, it leads
+bit length increases, reaching 93.6% in the 4096-bit              to greater quality degradation. In contrast, EIAW
+case. Similarly, the ASR increases with the embedding             embeds a single adversarial watermark and improves
+payload, achieving 100% when embedding 4096 bits.                 image quality using a frequency domain constraint,
+         Identity     Gaussian noise    Salt pepper        JPEG               Crop         Middle filter     Dropout
+
+
+
+
+                                                            (a)
+
+
+
+
+                                                            (b)
+
+Fig. 8 Robustness of the watermark under different noises. (a) Protected images with different editing operations, and (b)
+extracted watermark images.
+Yuming Liu et al.: Image Copyright Dual-Protection Based on Extractable and Imperceptible Adversarial Watermark                              731
+
+Table 7 Robustness of watermark EAR and ASR on                                  coverage attack (namely P-f), which applies
+ImageNet-1K. “—” denotes the identity setting (no-attack),                      perturbations to the entire image in the pixel domain,
+where the watermarked images are evaluated without any
+                                                                                and using L p norms to constrain the perturbations.
+distortion.
+                                                                                  As shown in Fig. 9, the F-c achieves the best image
+   Group                Type                EAR (%)             ASR (%)
+                                                                                quality among the three strategies. In contrast, the F-f,
+  Identity               —                   92.34               100.00
+                                                                                which applies perturbations to all frequencies, causes
+                        Crop                 82.43               92.46
+                                                                                more image quality degradation, even worse than the
+  Attack               JPEG                  78.52               82.44
+                                                                                P-f. It further validates the effectiveness of our
+                     Middle filter           77.26               83.45
+                                                                                frequency domain constraint in improving image
+           Table 8    Bit-stream embedding performance.                         quality.
+   Bit length            PSNR           EAR (%)                ASR (%)
+                                                                                5      Conclusion
+    512-bit               53.3            91.3                   94.9
+   1024-bit               53.8            92.1                   98.3           This paper introduces a novel approach for dual-
+   2048-bit               53.8            92.4                   99.7           protection of image copyright, based on an extractable
+   4096-bit               53.1            93.6                  100.0           and imperceptible adversarial watermark, EIAW. It
+                                                                                automatically embeds and optimizes an adversarial
+thereby achieving better performance.                                           watermark to prevent illegal use and verify ownership
+                                                                                simultaneously. Additionally, we propose a frequency
+4.8 Ablation study
+                                                                                domain constraint to optimize the locations for
+In this section, we conduct an ablation study to prove                          watermark embedding. Experimental results show that
+the effect of the frequency domain constraint on image                          the proposed EIAW approach achieves attack
+quality. We compare three strategies: (1) frequency                             effectiveness comparable to state-of-the-art methods
+domain constrained attack (namely F-c), which applies                           while enabling accurate watermark extraction and
+perturbations to specific frequency components using                            maintaining high image quality. As a result, the EIAW
+the mask, (2) frequency domain full coverage attack                             approach is well-suited for a wide range of real-world
+(namely F-f), which applies perturbations to all                                applications, providing comprehensive protection for
+frequency components, and (3) pixel domain full                                 image copyright.
+Table 9 Comparison with the two-phase method in terms of ASR, EAR, and imperceptibility. Bold value indicates the best
+performance among different methods. “ ↑ ” means larger is better, while “ ↓ ” means smaller is better.
+                                                                                                                Imperceptibility
+                       Method                                 ASR (%)           EAR (%)
+                                                                                                PSNR ↑             SSIM ↑          LPIPS ↓
+                       PGD[3]                                  100.00            50.00           45.40              0.988          0.0015
+                PGD + Watermarking                             76.42             91.57           44.41              0.985          0.0016
+                Watermarking + PGD                             100.00            65.23           44.39              0.986          0.0017
+                     EIAW (ours)                               100.00            92.34           52.68              0.997          0.0006
+
+           57                                                0.032                                     1.00
+           55                                                0.028                                     0.99
+           53                                                                                          0.98
+                                                             0.024
+           51                                                                                          0.97
+           49                                                0.020                                     0.96
+    PSNR
+
+
+
+
+                                                     IPIPS
+
+
+
+
+                                                                                                SSIM
+
+
+
+
+           47                                                0.016                                     0.95
+           45                                                0.012                                     0.94
+           43                                                                                          0.93
+           41                                                0.008
+                                                             0.004                                     0.92
+           39
+                                                                                                       0.91
+           37                                                    0                                     0.90
+                0 1 2 3 4 5 6 7 8 9 10                               0 1 2 3 4 5 6 7 8 9 10                   0 1 2 3 4 5 6 7 8 9 10
+                    Number of iterations                                 Number of iterations                     Number of iterations
+                           (a)                                                  (b)                                      (c)
+                                                                          P-f    F-f      F-c
+
+                                   Fig. 9   Comparison of image quality over iterations for three strategies.
+732                                                                      Big Data Mining and Analytics, June 2026, 9(3): 719−734
+
+Acknowledgment                                                           2020, pp. 1579−1587.
+                                                                  [11] H. Zhang, G. Cao, X. Zhang, J. Xiang, and C. Wu, Making
+This work was supported by the National Natural Science                  adversarial attack imperceptible in frequency domain: A
+Foundation of China (Nos. 62372125 and 62476113), the                    watermark-based framework, in Proc. 2023 IEEE Int.
+Guangdong Natural Science Funds for Distinguished                        Conf. Multimedia and Expo, Brisbane, Australia, 2023, pp.
+Young Scholar (No. 2023B1515020041), the Ministry of                     43−48.
+                                                                  [12]   M. Sharif, L. Bauer, and M. K. Reiter, On the suitability of
+Science and Technology Xiongan New Area Science and
+                                                                         Lp-norms for creating and preventing adversarial
+Technology Innovation Special Sub-course (No.                            examples, in Proc. IEEE Conf. Computer Vision and
+2022XAGG0126), the Liaoning Collaboration Innovation                     Pattern Recognition Workshops, Salt Lake City, UT, USA,
+Center For CSLE, the National College Student                            2018, pp. 1686−16868.
+Innovation Training Program of Guangzhou University               [13]   J. Chen, X. Liu, S. Liang, X. Jia, and Y. Xun, Universal
+(No. 202411078002), and the Provincial College Student                   watermark vaccine: Universal adversarial perturbations for
+                                                                         watermark protection, in Proc. 2023 IEEE/CVF Conf.
+Innovation Training Program of Guangzhou University
+                                                                         Computer Vision and Pattern Recognition Workshops,
+(No. 202511078077).                                                      Vancouver, Canada, 2023, pp. 2322−2329.
+References                                                        [14]   M. Macas, C. Wu, and W. Fuertes, Adversarial examples:
+                                                                         A survey of attacks and defenses in deep learning-enabled
+[1]  S. Mavaddati, Voice-based age, gender, and language                 cybersecurity systems, Expert Syst. Appl., vol. 238, p.
+     recognition based on ResNet deep model and transfer                 122223, 2024.
+     learning in spectro-temporal domain, Neurocomputing,         [15]   H. Wang, X. Wu, Z. Huang, and E. P. Xing, High-
+     vol. 580, p. 127429, 2024.                                          frequency component helps explain the generalization of
+[2] C. Szegedy, W. Zaremba, I. Sutskever, J. Bruna, D. Erhan,            convolutional neural networks, in Proc. IEEE/CVF Conf.
+     I. Goodfellow, and R. Fergus, Intriguing properties of              Computer Vision and Pattern Recognition, Seattle, WA,
+     neural networks, arXiv preprint arXiv: 1312.6199, 2013.             USA, 2020, pp. 8681−8691.
+[3] I. J. Goodfellow, J. Shlens, and C. Szegedy, Explaining       [16]   C. Luo, Q. Lin, W. Xie, B. Wu, J. Xie, and L. Shen,
+     and harnessing adversarial examples, arXiv preprint arXiv:          Frequency-driven imperceptible adversarial attack on
+     1412.6572, 2014.                                                    semantic similarity, in Proc. IEEE/CVF Conf. Computer
+[4] N. Carlini and D. Wagner, Towards evaluating the                     Vision and Pattern Recognition, New Orleans, LA, USA,
+     robustness of neural networks, in Proc. 2017 IEEE Symp.             2022, pp. 15294−15303.
+     Security and Privacy, San Jose, CA, USA, 2017, pp.           [17]   Y. Long, Q. Zhang, B. Zeng, L. Gao, X. Liu, J. Zhang, and
+     39−57.                                                              J. Song, Frequency domain model augmentation for
+[5] A. Madry, A. Makelov, L. Schmidt, D. Tsipras, and A.                 adversarial attack, in Proc. 17th European Conf. Computer
+     Vladu, Towards deep learning models resistant to                    Vision, Tel Aviv, Israel, 2022, pp. 549−566.
+     adversarial attacks, arXiv preprint arXiv: 1706.06083,       [18]   R. Duan, Y. Chen, D. Niu, Y. Yang, A. K. Qin, and Y. He,
+     2017.                                                               AdvDrop: Adversarial attack to DNNs by dropping
+[6] D. Awasthi, A. Tiwari, P. Khare, and V. K. Srivastava, A             information, in Proc. IEEE/CVF Int. Conf. Computer
+     comprehensive review on optimization-based image                    Vision, Montreal, Canada, 2021, pp. 7486−7495.
+     watermarking techniques for copyright protection, Expert     [19]   C. Guo, J. S. Frank, and K. Q. Weinberger, Low frequency
+     Syst. Appl., vol. 242, p. 122830, 2024.                             adversarial perturbation, in Proc. 35th Conf. Uncertainty in
+[7] A. V. Nadimpalli and A. Rattani, ProActive DeepFake                  Artificial Intelligence, Tel Aviv, Israel, 2019, pp.
+     detection using GAN-based visible watermarking, ACM                 1127−1137.
+     Trans. Multimedia Comput., Commun. Appl., vol. 20, no.       [20]   Z. Wang, A. C. Bovik, H. R. Sheikh, and E. P. Simoncelli,
+     11, p. 344, 2024.                                                   Image quality assessment: From error visibility to
+[8] H. K. Singh and A. K. Singh, Digital image watermarking              structural similarity, IEEE Trans. Image Process., vol. 13,
+     using deep learning, Multimedia Tools Appl., vol. 83, no.           no. 4, pp. 600–612, 2004.
+     1, pp. 2979–2994, 2024.                                      [21]   R. Zhang, P. Isola, A. A. Efros, E. Shechtman, and O.
+[9] Z. Jia, H. Fang, and W. Zhang, MBRS: Enhancing                       Wang, The unreasonable effectiveness of deep features as
+     robustness of DNN-based watermarking by mini-batch of               a perceptual metric, in Proc. IEEE Conf. Computer Vision
+     real and simulated JPEG compression, in Proc. 29th ACM              and Pattern Recognition, Salt Lake City, UT, USA, 2018,
+     Int. Conf. Multimedia, Virtual Event, 2021, pp. 41−49.              pp. 586−595.
+[10] X. Jia, X. Wei, X. Cao, and X. Han, Adv-watermark: A         [22]   S. Sharma, J. J. Zou, G. Fang, P. Shukla, and W. Cai, A
+     novel watermark perturbation for adversarial examples, in           review of image watermarking for identity protection and
+     Proc. 28th ACM Int. Conf. Multimedia, Seattle, WA, USA,             verification, Multimedia Tools Appl., vol. 83, no. 11, pp.
+Yuming Liu et al.: Image Copyright Dual-Protection Based on Extractable and Imperceptible Adversarial Watermark                     733
+
+       31829–31891, 2024.                                                  mechanism for enhancing copyright protection, ACM
+[23] C. Qiu, G. Nan, R. Liang, W. Deng, Y. Zhang, Y. Gao, D.               Trans. Multimedia Comput., Commun. Appl., vol. 21, no.
+       Wang, M. Qu, Z. Duan, Q. Sun, et al., Plugging and                  2, p. 43, 2024.
+       breathing on the air: A practical defense system for deep    [33]   A. A. Mohammed, D. A. Salih, A. M. Saeed, and M. Q.
+       learning-based wireless semantic communications, IEEE               Kheder, An imperceptible semi-blind image watermarking
+       Trans. Mobile Comput., vol. 24, no. 9, pp. 8683–8699,               scheme in DWT-SVD domain using a zigzag embedding
+       2025.                                                               technique, Multimedia Tools Appl., vol. 79, no. 43, pp.
+[24]   Y. Rong, G. Nan, M. Zhang, S. Chen, S. Wang, X. Zhang,              32095–32118, 2020.
+       N. Ma, S. Gong, Z. Yang, Q. Cui, et al., Semantic entropy    [34]   O. Russakovsky, J. Deng, H. Su, J. Krause, S. Satheesh, S.
+       can simultaneously benefit transmission efficiency and              Ma, Z. Huang, A. Karpathy, A. Khosla, M. Bernstein, et
+       channel security of wireless semantic communications,               al., ImageNet large scale visual recognition challenge, Int.
+       IEEE Trans. Inf. Forensics Secur., vol. 20, pp. 2067–2082,          J. Comput. Vis., vol. 115, no. 3, pp. 211–252, 2015.
+                                                                    [35]   K. He, X. Zhang, S. Ren, and J. Sun, Deep residual
+       2025.
+[25]   Y. Zhang, D. Ye, C. Xie, L. Tang, X. Liao, Z. Liu, C.               learning for image recognition, in Proc. IEEE Conf.
+       Chen, and J. Deng, Dual defense: Adversarial, traceable,            Computer Vision and Pattern Recognition, Las Vegas,
+                                                                           NV, USA, 2016, pp. 770−778.
+       and invisible robust watermarking against face swapping,
+                                                                    [36]   A. Krizhevsky, I. Sutskever, and G. E. Hinton, ImageNet
+       IEEE Trans. Inf. Forensics Secur., vol. 19, pp. 4628–4641,
+                                                                           classification with deep convolutional neural networks, in
+       2024.
+                                                                           Proc. 26th Int. Conf. Neural Information Processing
+[26]   Y. Li, X. Liao, and X. Wu, Screen-shooting resistant
+                                                                           Systems, Lake Tahoe, NV, USA, 2012, pp. 1097–1105.
+       watermarking with grayscale deviation simulation, IEEE
+                                                                    [37]   K. Simonyan and A. Zisserman, Very deep convolutional
+       Trans. Multimedia, vol. 26, pp. 10908–10923, 2024.                  networks for large-scale image recognition, arXiv preprint
+[27]   L. Fu, X. Liao, J. Guo, L. Dong, and Z. Qin,
+                                                                           arXiv: 1409.1556, 2014.
+       WaveRecovery: Screen-shooting watermarking based on          [38]   F. N. Iandola, S. Han, M. W. Moskewicz, K. Ashraf, W. J.
+       wavelet and recovery, IEEE Trans. Circuits Syst. Video              Dally, and K. Keutzer, SqueezeNet: AlexNet-level
+       Technol., vol. 35, no. 4, pp. 3603–3618, 2025.                      accuracy with 50x fewer parameters and <0.5MB model
+[28]   X. Liao, Y. Wang, T. Wang, J. Hu, and X. Wu, FAMM:                  size, arXiv preprint arXiv: 1602.07360, 2016.
+       Facial muscle motions for detecting compressed deepfake      [39]   M. Sandler, A. Howard, M. Zhu, A. Zhmoginov, and L. C.
+       videos over social networks, IEEE Trans. Circuits Syst.             Chen, MobileNetV2: Inverted residuals and linear
+       Video Technol., vol. 33, no. 12, pp. 7236−7251, 2023.               bottlenecks, in Proc. IEEE Conf. Computer Vision and
+[29]   H. Jiang, J. Yang, G. Hua, L. Li, Y. Wang, S. Tu, and S.            Pattern Recognition, Salt Lake City, UT, USA, 2018, pp.
+       Xia, FAWA: Fast adversarial watermark attack, IEEE                  4510−4520.
+       Trans. Comput., vol. 73, no. 2, pp. 301−313, 2024.           [40]   C. Szegedy, V. Vanhoucke, S. Ioffe, J. Shlens, and Z.
+[30]   X. Zuo, X. Wang, W. Zhang, and Y. Wang, MISPSO-                     Wojna, Rethinking the Inception architecture for computer
+       Attack: An efficient adversarial watermarking attack based          vision, in Proc. IEEE Conf. Computer Vision and Pattern
+       on multiple initial solution particle swarm optimization,           Recognition, Las Vegas, NV, USA, 2016, pp. 2818−2826.
+       Appl. Soft Comput., vol. 147, p. 110777, 2023.               [41]   A. Krizhevsky, Learning Multiple Layers of Features from
+[31]   P. Zhu, T. Takahashi, and H. Kataoka, Watermark-                    Tiny Images. Toronto, Canada: University of Toronto,
+       embedded adversarial examples for copyright protection              2009.
+       against diffusion models, in Proc. IEEE/CVF Conf.            [42]   R. R. Selvaraju, M. Cogswell, A. Das, R. Vedantam, D.
+       Computer Vision and Pattern Recognition, Seattle, WA,               Parikh, and D. Batra, Grad-CAM: Visual explanations
+       USA, 2024, pp. 24420−24430.                                         from deep networks via gradient-based localization, in
+[32]   J. Wang, H. Wang, J. Zhang, H. Wu, X. Luo, and B. Ma,               Proc. IEEE Int. Conf. Computer Vision, Venice, Italy,
+       Invisible adversarial watermarking: A novel security                2017, pp. 618−626.
+
+                      Yuming Liu is currently an undergraduate                            Shan Ai received the BEng and MEng
+                      student at School of Computer Science and                           degrees       from     Harbin     Engineering
+                      Cyber        Engineering,      Guangzhou                            University, China, in 2010 and 2013,
+                      University, China. Her main research                                respectively. He is currently an associate
+                      interests include artificial intelligence                           professor at School of Artificial
+                      security, multimedia security, information                          Intelligence,      Guangzhou       University,
+                      hiding, computer vision, and deep                                   China. His main research interest is
+                      learning.                                                           artificial intelligence security.
+734                                                                         Big Data Mining and Analytics, June 2026, 9(3): 719−734
+
+
+                       Zhili Zhou received the MEng and PhD                                 Wei Pang received the PhD degree in
+                       degrees in computer application from                                 computing science from University of
+                       Hunan University, China, in 2010 and                                 Aberdeen, UK, in 2009. He is currently a
+                       2014, respectively. He is currently a                                professor in computer science and
+                       professor at School of Artificial                                    bicentennial research leader at School of
+                       Intelligence,   Guangzhou      University,                           Mathematical and Computer Sciences,
+                       China. Also, he was a postdoctoral                                   Heriot-Watt University, Edinburgh, UK.
+                       researcher at Department of Electrical and                           He has authored more than 180 papers,
+Computer Engineering, University of Windsor, Canada. He has            including more than 90 journal papers. His research interests
+authored or coauthored more than 150 refereed papers. He is            include bioinspired computing, data mining, machine learning,
+serving as an associate editor of Tsinghua Science and                 and explainable and accountable AI.
+Technology, Big Data Mining and Analytics, Journal of Real-
+Time Image Processing, International Journal on Semantic Web                                 Huilin Ge received the MEng degree in
+and Information Systems, and CMC-Computers Materials &                                       control theory and control engineering and
+Continua. He has been selected as “World’s Top 2% Scientists”                                the PhD degree in naval architecture and
+from 2020 to 2023 by Stanford University and Elsevier. He                                    ocean engineering from Jiangsu University
+received ACM SIGWEB Rising Star Award and got Guangdong                                      of Science and Technology, China, in 2013
+Natural Science Funds for Distinguished Young Scholar. His                                   and 2023, respectively. He is currently a
+main research interests include multimedia security, artificial                              distinguished researcher at Jiangsu
+intelligence security, and information hiding.                                               University of Science and Technology,
+                                                                       China. With a solid academic foundation in control theory and
+                    Changyu Dong received the PhD degree               control engineering, his career is marked by significant
+                    from Imperial College London, UK, in               contributions to scientific research and project management,
+                    2009. He is currently a professor at School        having successfully directed two national-level, two provincial-
+                    of Artificial Intelligence, Guangzhou              level, and three municipal-level research projects. In recognition
+                    University, China. He has authored over 70         of his academic excellence and leadership, he holds the
+                    publications in international journals and         esteemed title of “Vice President of Science and Technology”.
+                    conferences. His recent work focuses               His research interests encompass deep learning, underwater
+                    mostly on designing practical secure               information perception, and artificial intelligence, with a
+computation protocols. The application domains include                 particular emphasis on the integration of low-level features to
+trustworthy machine learning, secure cloud computing, and              derive abstract high-level representations. His research interests
+privacy-preserving data mining. His research interests include         include robotics, speech recognition, image recognition, and
+applied cryptography, AI security, data privacy, and machine           natural language processing.
+learning.
+                                                                                           Yongfeng Huang received the PhD degree
+                     Daizhi Liao is currently an undergraduate                             in computer science and engineering from
+                     student at School of Computer Science and                             Huazhong University of Science and
+                     Cyber        Engineering,          Guangzhou                          Technology, Wuhan, China, in 2000. He is
+                     University, China. His research interests                             currently a professor at Department of
+                     lie in the security of artificial intelligence,                       Electronic      Engineering,    Tsinghua
+                     with a focus on aspects such as potential                             University, Beijing, China. His research
+                     vulnerabilities, and safeguard strategies                             interests include cloud computing, data
+                     within AI systems.                                mining, and network security.
+
